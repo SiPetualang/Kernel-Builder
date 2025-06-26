@@ -24,26 +24,32 @@ Phones compatible with GKI.
 
 **【Adverse Reactions】**
 
-常见：发热。偶见：死机。罕见：黑砖。
+    Common: overheating
+    Occasional: system crashes
+    Rare: device bricking
 
-**【注意事项】**
+**【Precautions】**
 
-本内核安全补丁级别来自 KernelSU workflow 的最新设定。
+This kernel’s security patch level is based on the latest KernelSU workflow settings.
 
-请在安装此项目的内核前，启动一次官方或者 5ec1cff 的 KernelSU，进入系统后打开 KernelSU 管理器，进入设置，**关闭全局 umount**。这是为了防止 susfs 对 umount 的应用处理导致系统应用出现问题。可能出现的现象包括但不限于：
+Before installing this kernel, make sure to boot once into the official or 5ec1cff version of KernelSU. After entering the system, open the KernelSU Manager, go to settings, and **disable global umount**. This is to prevent susfs’s handling of umount from affecting system apps. Possible symptoms include but are not limited to：
 
-- 启动后黑屏（SystemUI 无法加载）
-- Wi-Fi 无法访问
-- 基带有关通讯无法访问
+- Black screen after boot (SystemUI fails to load)
+- Wi-Fi inaccessible
+- Baseband-related communications unavailable
 
-**【核代动力学】**
+**【Pharmacokinetics (Kinetics of the Kernel)】**
 
-对 Pixel 8 进行了通用内核映像的核代动力学研究。可以启动。
+Kinetics of the Generic Kernel Image have been studied on Pixel 8. It can boot successfully.
 
-> **软件相互作用**
+> **Software Interaction**
 >
-> 质感清理：susFS 与质感清理合并使用时，两者的核代动力学和核效学存在相互作用。在 susFS 上市后，曾有报道使用质感清理的用户反馈 umount 的 app 显示剩余空间 0B 的情况。此外，因为此事带来的连带效应包括微信小程序不能启动。
+> Material Cleaner: When used together with SUSFS, there are interactions in both kinetics and dynamics. After SUSFS was released, users reported that using Material Cleaner caused the “umount app” to show 0B of free space. Additionally, side effects included WeChat Mini Programs failing to launch.
 
-**【储藏】** 任意条件。
+**【Storage】**
 
-**【包装】** 压缩包文件。
+No specific condition required.
+
+**【Packaging】**
+
+Archive file.
