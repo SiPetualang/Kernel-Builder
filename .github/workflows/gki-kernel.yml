@@ -28,27 +28,16 @@ on:
       kernelsu_branch:
         required: true
         type: string
-      # kernelsu_branch_other:
-      #   required: false
-      #   type: string
       revision:
         required: false
         type: string
       version:
         required: false
         type: string
-      use_zram:
-        required: true
-        type: boolean
-        default: true
       use_kpm:
         required: true
         type: boolean
         default: true
-      supp_op:
-        required: true
-        type: boolean
-        default: false
       fast:
         required: false
         type: boolean
@@ -161,17 +150,6 @@ jobs:
           # Clone repositories using the branch names
           git clone https://github.com/WildPlusKernel/AnyKernel3.git -b "$ANYKERNEL_BRANCH"
           git clone https://gitlab.com/simonpunk/susfs4ksu.git -b "$SUSFS_BRANCH"
-
-          # # SUSFS1.5.8在6.6有BUG,临时切换到1.5.7
-          # if [[ "${{ inputs.kernel_version }}" == "6.6" ]]; then
-          #   TARGET_COMMIT="09fec8aa1f39807788c526dd84429f6d92b805ae"
-          #   cd susfs4ksu
-          #   # -------------------------------- #
-          #   git checkout "$TARGET_COMMIT"
-          #   git log -1 --pretty=oneline
-          #   # -------------------------------- #
-          #   cd ..
-          # fi
 
           git clone https://github.com/WildPlusKernel/kernel_patches.git
           # Sukisu的补丁仓库
