@@ -23,7 +23,6 @@ on:
         options:
           - Stable
           - Dev
-          - Other
         default: Dev
       version:
         description: 'Custom version name (if it is located at 6.6.77-android15-8<custom version name>/leave blank, the default version number will be used)'
