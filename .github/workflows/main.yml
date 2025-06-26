@@ -33,17 +33,17 @@ on:
         description: 'Do you want to get the latest KSU manager at the same time? (Experimental function, please close if error is reported)'
         required: true
         type: boolean
-        default: true
+        default: false
       fast:
         description: 'Compilation speedup (experimental): average speedup of 7 minutes'
         required: false
         type: boolean
-        default: false
+        default: true
       onlyAk3:
         description: 'Only upload the AK3 compressed package? (No boot, faster download)'
         required: false
         type: boolean
-        default: false
+        default: true
 jobs:
 
  build-kernel-a15-6-6:
