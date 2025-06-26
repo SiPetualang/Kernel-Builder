@@ -24,10 +24,6 @@ on:
           - Stable
           - Dev
         default: Dev
-      version:
-        description: 'Custom version name (if it is located at 6.6.77-android15-8<custom version name>/leave blank, the default version number will be used)'
-        required: false
-        type: string
       use_kpm:
         description: 'Do you want to enable the KPM function?'
         required: false
@@ -54,10 +50,8 @@ jobs:
     uses: ./.github/workflows/kernel-a15-6.6.yml
     secrets: inherit
     with:
-      make_release: false
       kernelsu_variant: ${{ inputs.kernelsu_variant }}
       kernelsu_branch: ${{ inputs.kernelsu_branch }}
-      version: ${{ inputs.version }}
       use_kpm: ${{ inputs.use_kpm }}
       fast: ${{ inputs.fast }}
       onlyAk3: ${{ inputs.onlyAk3 }}
