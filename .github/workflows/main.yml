@@ -1,0 +1,70 @@
+name: Build GKI
+
+permissions:
+  contents: write  # Allow writing to repository contents (for pushing tags)
+  actions: write   # Allows triggering actions
+  
+on:
+  workflow_dispatch:
+    inputs:
+      kernelsu_variant:
+        description: "Select KernelSU"
+        required: true
+        type: choice
+        options:
+          - Next
+          - MKSU
+          - SukiSU
+        default: SukiSU
+      kernelsu_branch:
+        description: "Select KSU branch"
+        required: true
+        type: choice
+        options:
+          - Stable
+          - Dev
+          - Other
+        default: Dev
+      version:
+        description: 'Custom version name (if it is located at 6.6.77-android15-8<custom version name>/leave blank, the default version number will be used)'
+        required: false
+        type: string
+      use_kpm:
+        description: 'Do you want to enable the KPM function?'
+        required: false
+        type: boolean
+        default: true
+      get_manager:
+        description: 'Do you want to get the latest KSU manager at the same time? (Experimental function, please close if error is reported)'
+        required: true
+        type: boolean
+        default: true
+      fast:
+        description: 'Compilation speedup (experimental): average speedup of 7 minutes'
+        required: false
+        type: boolean
+        default: false
+      onlyAk3:
+        description: 'Only upload the AK3 compressed package? (No boot, faster download)'
+        required: false
+        type: boolean
+        default: false
+jobs:
+
+ build-kernel-a15-6-6:
+    uses: ./.github/workflows/kernel-a15-6.6.yml
+    secrets: inherit
+    with:
+      make_release: false
+      kernelsu_variant: ${{ inputs.kernelsu_variant }}
+      kernelsu_branch: ${{ inputs.kernelsu_branch }}
+      version: ${{ inputs.version }}
+      use_kpm: ${{ inputs.use_kpm }}
+      fast: ${{ inputs.fast }}
+      onlyAk3: ${{ inputs.onlyAk3 }}
+ get-ksu-manager:
+    if: ${{ inputs.get_manager }}
+    uses: ./.github/workflows/get-manager.yml
+    secrets: inherit
+    with:
+      kernelsu_variant: ${{ inputs.kernelsu_variant }}
