@@ -6,10 +6,6 @@ permissions:
 on:
   workflow_call:  # This allows this workflow to be called from another workflow
     inputs:
-      make_release:
-        required: true
-        type: boolean
-        default: true
       kernelsu_variant:
         required: true
         type: string
@@ -18,10 +14,6 @@ on:
         required: true
         type: string
         default: Stable
-      version:
-        required: false
-        type: string
-        default: ""
       use_kpm:
         description: 'Do you want to enable the KPM function?'
         required: false
@@ -58,14 +50,12 @@ jobs:
     uses: ./.github/workflows/gki-kernel.yml
     secrets: inherit
     with:
-      make_release: ${{ inputs.make_release || false }}
       android_version: "android15"
       kernel_version: "6.6"
       sub_level: ${{ matrix.sub_level }}
       os_patch_level: ${{ matrix.os_patch_level }}
       kernelsu_variant: ${{ inputs.kernelsu_variant || 'Next' }}
       kernelsu_branch: ${{ inputs.kernelsu_branch || 'Dev' }}
-      version: ${{ inputs.version || '' }}
       use_kpm: ${{ inputs.use_kpm }}
       fast: ${{ inputs.fast }}
       onlyAk3: ${{ inputs.onlyAk3 || false }}
