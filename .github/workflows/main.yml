@@ -26,17 +26,17 @@ on:
         default: Dev
       use_kpm:
         description: 'Do you want to enable the KPM function?'
-        required: false
+        required: true
         type: boolean
         default: true
       get_manager:
         description: 'Do you want to get the latest KSU manager at the same time? (Experimental function, please close if error is reported)'
-        required: true
+        required: false
         type: boolean
         default: false
       fast:
         description: 'Compilation speedup (experimental): average speedup of 7 minutes'
-        required: false
+        required: true
         type: boolean
         default: true
       onlyAk3:
