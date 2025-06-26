@@ -356,24 +356,6 @@ jobs:
           sed -i 's/check_defconfig//' ./common/build.config.gki
           # debug config
           #tail -n 40 ./common/arch/arm64/configs/gki_defconfig
-          
-      - name: Change Kernel Name
-        run: |
-          cd "$CONFIG"
-
-          # modify UTS_VERSION
-          perl -pi -e 's{UTS_VERSION="\$\(echo \$UTS_VERSION \$CONFIG_FLAGS \$TIMESTAMP \| cut -b -\$UTS_LEN\)"}{UTS_VERSION="#1 SMP PREEMPT Sun Apr 20 04:20:00 UTC 2025"}' ./common/scripts/mkcompile_h
-          
-          sed -i "RODIN" ./common/scripts/setlocalversion
-          if [ -f "build/build.sh" ]; then
-            sed -i 's/-dirty//' ./common/scripts/setlocalversion
-          else
-            sed -i 's/build-timestamp = $(or $(KBUILD_BUILD_TIMESTAMP), $(build-timestamp-auto))/build-timestamp = "Sun Apr 20 04:20:00 UTC 2025"/' ./common/init/Makefile
-            sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' ./common/BUILD.bazel
-            rm -rf ./common/android/abi_gki_protected_exports_*
-            sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
-            sed -E -i "RODIN" ./common/arch/arm64/configs/gki_defconfig
-          fi
 
       - name: Build with retry
         uses: nick-fields/retry@v3
@@ -448,6 +430,20 @@ jobs:
               cp ./out/arch/arm64/boot/Image* ../bazel-bin/common/kernel_aarch64/
             fi
 
+      - name: 修补 Image 文件 安卓14和安卓15(仅限sukisu)
+        if: ${{ inputs.use_kpm && inputs.kernelsu_variant == 'SukiSU' && (inputs.android_version == 'android15') }}
+        run: |
+          if [ "${{ inputs.kernel_version }}" = "6.6" ]; then
+            echo "Patching Image file..."
+            cd "$CONFIG/bazel-bin/common/kernel_aarch64/"
+            curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.12.0/patch_linux
+            chmod +x patch_linux
+            ./patch_linux
+            rm -rf Image
+            mv oImage Image
+            cd ../../..
+          fi
+          
       - name: Create Bootimgs Folder and Copy Images
         if: ${{ inputs.android_version == 'android15' }}
         run: |
@@ -500,7 +496,7 @@ jobs:
           $MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
           $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
           cp ./boot-lz4.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot-lz4.img
-
+         
       - name: Upload compiled assets (complete package)
         if: ${{ !inputs.onlyAk3 }}
         uses: actions/upload-artifact@v4
