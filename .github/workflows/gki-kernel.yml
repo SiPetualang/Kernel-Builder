@@ -1,41 +1,61 @@
-name: GKI Kernel Build
-permissions:
-  contents: write  # Allow writing to repository contents (for pushing tags)
-  actions: write   # Allows triggering actions
+name: Build GKI
 
 on:
-  workflow_call: # This allows this workflow to be called from another workflow
+  workflow_dispatch:
     inputs:
+      kernelsu_variant:
+        description: "Select KernelSU"
+        required: true
+        type: choice
+        options:
+          - Next
+          - MKSU
+          - SukiSU
+        default: SukiSU
+      kernelsu_branch:
+        description: "Select KSU branch"
+        required: true
+        type: choice
+        options:
+          - Stable
+          - Dev
+        default: Dev
+      sub_level:
+        description: "Select sub level"
+        required: true
+        type: choice
+        options:
+          - "89"
+        default: "89"
+      use_kpm:
+        description: 'Do you want to enable the KPM function?'
+        required: true
+        type: boolean
+        default: true
+      fast:
+        description: 'Compilation speedup (experimental): average speedup of 7 minutes'
+        required: true
+        type: boolean
+        default: true
+      onlyAk3:
+        description: 'Only upload the AK3 compressed package? (No boot, faster download)'
+        required: true
+        type: boolean
+        default: false
       android_version:
         required: true
         type: string
+        default: "android15"
       kernel_version:
         required: true
         type: string
-      sub_level:
-        required: true
-        type: string
-      os_patch_level:
-        required: true
-        type: string
-      kernelsu_variant:
-        required: true
-        type: string
-      kernelsu_branch:
-        required: true
-        type: string
+        default: "6.6"
+      #os_patch_level:
+      #  required: true
+      #  type: string
       revision:
         required: false
         type: string
-      use_kpm:
-        required: true
-        type: boolean
-      fast:
-        required: false
-        type: boolean
-      onlyAk3:
-        required: true
-        type: boolean
         
 jobs:
   build-kernel-kernelsu-susfs:
@@ -326,9 +346,10 @@ jobs:
           echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_TCP_CONG_CUBIC=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_DEFAULT_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_DEFAULT_TCP_CONG=bbr" >> ./common/arch/arm64/configs/gki_defconfig
 
           # Add SUSFS configuration settings
           echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -372,50 +393,35 @@ jobs:
             sed -i '/KMI_SYMBOL_LIST_STRICT_MODE/d' common/build.config.gki.aarch64
 
             echo "Building the kernel..."
-            if [ -f "build/build.sh" ]; then
-              LTO=thin BUILD_CONFIG=common/build.config.gki.aarch64 build/build.sh CC="/usr/bin/ccache clang" || exit 1
-            elif [ "${{ inputs.fast }}" != "true" ]; then
+            if [ "${{ inputs.fast }}" != "true" ]; then
               tools/bazel build --disk_cache=/home/runner/.cache/bazel --config=fast --lto=thin //common:kernel_aarch64_dist || exit 1
             else
               sed -i 's/-dirty//' common/scripts/setlocalversion
-              case "${{ inputs.kernel_version }}" in
-                  "6.1")
-                      CLANG_VERSION="clang-r487747c"
-                      ;;
-                  "6.6")
-                      CLANG_VERSION="clang-r510928"
-                      ;;
-                  *)
-                      echo "Error: Unsupported kernel_version: '${{ inputs.kernel_version }}'"
-                      exit 1
-                      ;;
-                esac
+              CLANG_VERSION="clang-r510928"
 
-                echo "Using Clang version: $CLANG_VERSION for Kernel version: ${{ inputs.kernel_version }}"
+              echo "Using Clang version: $CLANG_VERSION for Kernel version: ${{ inputs.kernel_version }}"
 
-                cd common
+              cd common
 
-                export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/$CLANG_VERSION/bin:$PATH"
-                export PATH="$GITHUB_WORKSPACE/$CONFIG/gcc/bin:$PATH"
-                export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/kernel-build-tools/linux-x86/bin:$PATH"
+              export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/$CLANG_VERSION/bin:$PATH"
+              export PATH="$GITHUB_WORKSPACE/$CONFIG/gcc/bin:$PATH"
+              export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/kernel-build-tools/linux-x86/bin:$PATH"
 
-                echo "--- Clang Version ---"
-                clang --version
-                echo "--- GCC Version ---"
-                aarch64-linux-gnu-gcc -v
+              echo "--- Clang Version ---"
+              clang --version
+              echo "--- GCC Version ---"
+              aarch64-linux-gnu-gcc -v
 
-                COMMON_MAKE_PARAMS=(
-                  -j$(nproc --all)
-                  O=out
-                  ARCH=arm64
-                  LLVM=1
-                  CROSS_COMPILE=aarch64-linux-gnu-
+              COMMON_MAKE_PARAMS=(
+                -j$(nproc --all)
+                O=out
+                ARCH=arm64
+                LLVM=1
+                CROSS_COMPILE=aarch64-linux-gnu-
               )
 
               BUILD_TARGETS=(
                   Image
-                  Image.lz4
-                  Image.gz
                   modules
               )
               
@@ -424,7 +430,6 @@ jobs:
               make "${COMMON_MAKE_PARAMS[@]}" "${BUILD_TARGETS[@]}" || { echo "make failed"; exit 1; }
   
               mkdir -p ../bazel-bin/common/kernel_aarch64/
-              echo "debug: output kernel version number"
               strings out/arch/arm64/boot/Image | grep 'Linux version'
               cp ./out/arch/arm64/boot/Image* ../bazel-bin/common/kernel_aarch64/
             fi
@@ -467,7 +472,6 @@ jobs:
           fi
 
       - name: Run Boot Image ${{ inputs.android_version }} Build Script
-        if: ${{ inputs.android_version == 'android15' }}
         run: |
           cd bootimgs
 
