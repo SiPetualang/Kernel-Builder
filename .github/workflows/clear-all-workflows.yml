@@ -7,9 +7,9 @@ on:
         type: choice
         description: 'Cleanup workflow name'
         required: true
-        default: 'build-kernel'
+        default: 'Build-GKI'
         options:
-          - build-kernel
+          - Build-GKI
       count:
         description: 'Maximum number of cleanup runs'
         required: false
