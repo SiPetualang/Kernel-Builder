@@ -1,4 +1,4 @@
-name: Build GKI
+name: Build-GKI
 
 on:
   workflow_dispatch:
