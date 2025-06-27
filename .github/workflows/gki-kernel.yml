@@ -378,8 +378,6 @@ jobs:
           
           # Remove check_defconfig
           sed -i 's/check_defconfig//' ./common/build.config.gki
-          cd common
-          git add -A && git commit -a -m "BUILD Kernel"
 
       #- name: Change Kernel Name
       #  run: |
