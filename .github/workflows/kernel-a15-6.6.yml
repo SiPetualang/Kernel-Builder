@@ -1,0 +1,59 @@
+name: Android-15 6.6
+
+permissions:
+  contents: write
+  actions: write
+  
+on:
+  workflow_dispatch:
+    inputs:
+      kernelsu_variant:
+        description: "Select KernelSU"
+        required: true
+        type: choice
+        options:
+          - Next
+          - MKSU
+          - SukiSU
+        default: SukiSU
+      kernelsu_branch:
+        description: "Select KSU branch"
+        required: true
+        type: choice
+        options:
+          - Stable
+          - Dev
+        default: Stable
+      use_kpm:
+        description: 'Do you want to enable the KPM function?'
+        required: true
+        type: boolean
+        default: false
+      onlyAk3:
+        description: 'Only upload the AK3 compressed package? (No boot, faster download)'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  build-kernel-a15-6-6-kernelsu-susfs:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - sub_level: "89"
+            os_patch_level: "2025-06"
+          - sub_level: "92"
+            os_patch_level: "2025-06"
+            
+    uses: ./.github/workflows/gki-kernel.yml
+    secrets: inherit
+    with:
+      android_version: "android15"
+      kernel_version: "6.6"
+      sub_level: ${{ matrix.sub_level }}
+      os_patch_level: ${{ matrix.os_patch_level }}
+      kernelsu_variant: ${{ inputs.kernelsu_variant }}
+      kernelsu_branch: ${{ inputs.kernelsu_branch }}
+      use_kpm: ${{ inputs.use_kpm }}
+      onlyAk3: ${{ inputs.onlyAk3 }}
