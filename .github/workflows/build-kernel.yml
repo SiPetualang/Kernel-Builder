@@ -363,32 +363,44 @@ jobs:
          sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
          sudo sed -i 's/-4k/-#NotFound/g' ./common/arch/arm64/configs/gki_defconfig
 
-      - name: 🔨 Build Kernel (构建内核)
-        run: |
-          #sed -i 's/BUILD_SYSTEM_DLKM=1/BUILD_SYSTEM_DLKM=0/' common/build.config.gki.aarch64
-          #sed -i '/MODULES_ORDER=android\/gki_aarch64_modules/d' common/build.config.gki.aarch64
-          #sed -i '/KMI_SYMBOL_LIST_STRICT_MODE/d' common/build.config.gki.aarch64
+      - name: Build with retry
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_on: timeout
+          command: |
+            set -e
+            set -x
+      
+            #sed -i 's/BUILD_SYSTEM_DLKM=1/BUILD_SYSTEM_DLKM=0/' common/build.config.gki.aarch64
+            #sed -i '/MODULES_ORDER=android\/gki_aarch64_modules/d' common/build.config.gki.aarch64
+            #sed -i '/KMI_SYMBOL_LIST_STRICT_MODE/d' common/build.config.gki.aarch64
+            #sed -i 's/-dirty//' common/scripts/setlocalversion
+            
+            cd "$CONFIG/common"
+            export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH"
+            #export PATH="$GITHUB_WORKSPACE/$CONFIG/gcc/bin:$PATH"
+            #export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/kernel-build-tools/linux-x86/bin:$PATH"
 
-          export PATH="/usr/lib/ccache:$PATH"
-          export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH"
+            COMMON_MAKE_PARAMS=(
+              -j$(nproc --all)
+              O=out
+              ARCH=arm64
+              LLVM=1
+              CROSS_COMPILE=aarch64-linux-gnu-
+            )
+
+            #make "${COMMON_MAKE_PARAMS[@]}" gki_defconfig || { echo "make defconfig failed"; exit 1; }
+            #make "${COMMON_MAKE_PARAMS[@]}" Image || { echo "make failed"; exit 1; }
+
+            make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig
+            make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  Image
           
-          cd common
-          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig
-          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  Image
-          
-          mkdir -p ../bazel-bin/common/kernel_aarch64/
-          strings out/arch/arm64/boot/Image | grep 'Linux version'
-          cp ./out/arch/arm64/boot/Image* ../bazel-bin/common/kernel_aarch64/
-              
-      - name: Apply patch_linux and replace Image (SukiSu only)
-        if: ${{ inputs.use_kpm && inputs.kernelsu_variant == 'SukiSU' }}
-        run: |
-          cd "$CONFIG/bazel-bin/common/kernel_aarch64/"
-          curl -LO https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/0.12.0/patch_linux
-          chmod +x patch_linux
-          ./patch_linux
-          rm -rf Image
-          mv oImage Image
+            mkdir -p ../bazel-bin/common/kernel_aarch64/
+            strings out/arch/arm64/boot/Image | grep 'Linux version'
+            cp ./out/arch/arm64/boot/Image* ../bazel-bin/common/kernel_aarch64/
+
           
       - name: Create Bootimgs Folder and Copy Images
         run: |
