@@ -3,6 +3,22 @@ name: Build-GKI
 on:
   workflow_dispatch:
     inputs:
+      android_version:
+        description: "Select Android verison"
+        required: true
+        type: choice
+        options:
+          - android15
+          - android16
+        default: android15
+      kernel_version:
+        description: "Select Kernel verison"
+        required: true
+        type: choice
+        options:
+          - "6.6"
+          - "6.12"
+        default: "6.6"
       sub_level:
         description: "Select sub level"
         required: true
