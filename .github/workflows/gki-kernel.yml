@@ -395,7 +395,7 @@ jobs:
       - name: Apply KPM Patch
         if: ${{ inputs.use_kpm && inputs.kernelsu_variant == 'SukiSU' }}
         run: |  
-          cd "$CONFIG/out/arch/arm64/boot"
+          cd "$CONFIG/common/out/arch/arm64/boot"
           TAG=$(curl -s https://api.github.com/repos/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases | \jq -r 'map(select(.prerelease)) | first | .tag_name')
           echo "Latest tag is: $TAG"
           curl -Ls -o patch_linux "https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/$TAG/patch_linux"
