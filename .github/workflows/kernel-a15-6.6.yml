@@ -23,7 +23,12 @@ on:
         options:
           - Stable
           - Dev
-        default: Stable
+        default: Dev
+      use_zram:
+        description: 'Do you want to enable adding lz4+zstd?'
+        required: true
+        type: boolean
+        default: false
       use_kpm:
         description: 'Do you want to enable the KPM function?'
         required: true
@@ -55,5 +60,6 @@ jobs:
       os_patch_level: ${{ matrix.os_patch_level }}
       kernelsu_variant: ${{ inputs.kernelsu_variant }}
       kernelsu_branch: ${{ inputs.kernelsu_branch }}
-      use_kpm: ${{ inputs.use_kpm }}
+      use_zram: ${{ inputs.use_kpm }}
+      use_kpm: ${{ inputs.use_zram }}
       onlyAk3: ${{ inputs.onlyAk3 }}
