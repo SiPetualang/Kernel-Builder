@@ -1,59 +1,36 @@
 name: Build-GKI
 
+permissions:
+  contents: write
+  actions: write
+
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       android_version:
-        description: "Select Android verison"
         required: true
-        type: choice
-        options:
-          - android15
-          - android16
-        default: android15
+        type: string
       kernel_version:
-        description: "Select Kernel verison"
         required: true
-        type: choice
-        options:
-          - "6.6"
-          - "6.12"
-        default: "6.6"
+        type: string
       sub_level:
-        description: "Select sub level"
         required: true
-        type: choice
-        options:
-          - "89"
-          - "92"
-        default: "92"
+        type: string
+      os_patch_level:
+        required: true
+        type: string
       kernelsu_variant:
-        description: "Select KernelSU"
         required: true
-        type: choice
-        options:
-          - Next
-          - MKSU
-          - SukiSU
-        default: SukiSU
+        type: string
       kernelsu_branch:
-        description: "Select KSU branch"
         required: true
-        type: choice
-        options:
-          - Stable
-          - Dev
-        default: Stable
+        type: string
       use_kpm:
-        description: 'Do you want to enable the KPM function?'
         required: true
         type: boolean
-        default: true
       onlyAk3:
-        description: 'Only upload the AK3 compressed package? (No boot, faster download)'
         required: true
         type: boolean
-        default: false
         
 jobs:
   build-kernel-kernelsu-susfs:
@@ -64,12 +41,6 @@ jobs:
       CCACHE_HARDLINK: "true"
 
     steps:
-      - name: Check os patch level
-        run: |
-          if [ "${{ inputs.sub_level }}" == "89" ]; then
-           echo "os_patch_level=2025-06" >> $GITHUB_ENV
-          fi
-          
       - name: Maximize Build Space
         uses: AdityaGarg8/remove-unwanted-software@v5
         with:
@@ -86,7 +57,7 @@ jobs:
       - name: Set CONFIG Environment Variable
         run: |
           # Set CONFIG dynamically based on inputs values
-          CONFIG="android15-6.6-${{ inputs.sub_level }}"
+          CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
 
           # Set CONFIG as an environment variable for future steps
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
@@ -109,9 +80,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: android15-6.6-${{ inputs.sub_level }}-ccache-${{ github.sha }}
+          key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-${{ github.sha }}
           restore-keys: |
-            android15-6.6-${{ inputs.sub_level }}-ccache-
+            ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-
             
       - name: Cache toolchain
         id: cache-toolchain
@@ -162,7 +133,7 @@ jobs:
           echo "Cloning AnyKernel3 and other dependencies..."
 
           # Clone repositories using the branch names
-          git clone https://github.com/ShirkNeko/susfs4ksu.git -b gki-android15-6.6
+          git clone https://github.com/ShirkNeko/susfs4ksu.git -b gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           git clone https://github.com/MiRinChan/AnyKernel3.git
 
@@ -171,13 +142,10 @@ jobs:
           echo "Creating folder for configuration: $CONFIG..."
           mkdir -p "$CONFIG"
           cd "$CONFIG"
-          
-          #git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-gnu-6.4.1.git gcc
-          #ls gcc/bin
-
+    
           # Initialize and sync kernel source
           echo "Initializing and syncing kernel source..."
-          FORMATTED_BRANCH="android15-6.6-$os_patch_level"
+          FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-$os_patch_level"
           $REPO init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${FORMATTED_BRANCH} --repo-rev=v2.16
           REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
           DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
@@ -251,7 +219,7 @@ jobs:
           echo "Applying SUSFS patches..."
 
           # Copy SUSFS patches
-          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
+          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
           cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           
@@ -281,7 +249,7 @@ jobs:
           fi
 
           cd ../common
-          patch -p1 --fuzz=3 < 50_add_susfs_in_gki-android15-6.6.patch || true
+          patch -p1 --fuzz=3 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch || true
   
       - name: Apply Hooks Patches
         run: |
@@ -413,7 +381,7 @@ jobs:
           cd ./AnyKernel3
 
           # Create and upload zip for each format
-          ZIP_NAME="android15-6.6.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3.zip"
+          ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3.zip"
           echo "Creating zip file: $ZIP_NAME..."
           mv ../Image ./Image
           if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
@@ -421,7 +389,7 @@ jobs:
             rm ./Image
           fi
           
-          # ZIP_NAME="android15-6.6.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3-lz4.zip"
+          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3-lz4.zip"
           # echo "Creating zip file: $ZIP_NAME..."
           # mv ../Image.lz4 ./Image.lz4
           #if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
@@ -429,7 +397,7 @@ jobs:
           #  rm ./Image.lz4
           #fi
           
-          # ZIP_NAME="android15-6.6.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3-gz.zip"
+          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3-gz.zip"
           # echo "Creating zip file: $ZIP_NAME..."
           # mv ../Image.gz ./Image.gz
           #if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
@@ -447,17 +415,17 @@ jobs:
           echo "Building boot.img"
           $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
           $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
-          cp ./boot.img ../android15-6.6.${{ inputs.sub_level }}-$os_patch_level-boot.img
+          cp ./boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-boot.img
 
           #echo "Building boot-gz.img"
           #$MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
           #$AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
-          #cp ./boot-gz.img ../android15-6.6.${{ inputs.sub_level }}-$os_patch_level-boot-gz.img
+          #cp ./boot-gz.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-boot-gz.img
 
           #echo "Building boot-lz4.img"
           #$MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
           #$AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
-          #cp ./boot-lz4.img ../android15-6.6.${{ inputs.sub_level }}-$os_patch_level-boot-lz4.img
+          #cp ./boot-lz4.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-boot-lz4.img
          
       - name: Upload compiled assets (complete package)
         if: ${{ !inputs.onlyAk3 }}
