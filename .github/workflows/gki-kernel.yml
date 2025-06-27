@@ -145,7 +145,7 @@ jobs:
     
           # Initialize and sync kernel source
           echo "Initializing and syncing kernel source..."
-          FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-$os_patch_level"
+          FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.os_patch_level }}"
           $REPO init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${FORMATTED_BRANCH} --repo-rev=v2.16
           REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
           DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
@@ -381,7 +381,7 @@ jobs:
           cd ./AnyKernel3
 
           # Create and upload zip for each format
-          ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3.zip"
+          ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3.zip"
           echo "Creating zip file: $ZIP_NAME..."
           mv ../Image ./Image
           if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
@@ -389,7 +389,7 @@ jobs:
             rm ./Image
           fi
           
-          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3-lz4.zip"
+          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3-lz4.zip"
           # echo "Creating zip file: $ZIP_NAME..."
           # mv ../Image.lz4 ./Image.lz4
           #if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
@@ -397,7 +397,7 @@ jobs:
           #  rm ./Image.lz4
           #fi
           
-          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-AnyKernel3-gz.zip"
+          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3-gz.zip"
           # echo "Creating zip file: $ZIP_NAME..."
           # mv ../Image.gz ./Image.gz
           #if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
@@ -415,17 +415,17 @@ jobs:
           echo "Building boot.img"
           $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
           $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
-          cp ./boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-boot.img
+          cp ./boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
           #echo "Building boot-gz.img"
           #$MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
           #$AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
-          #cp ./boot-gz.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-boot-gz.img
+          #cp ./boot-gz.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot-gz.img
 
           #echo "Building boot-lz4.img"
           #$MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
           #$AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
-          #cp ./boot-lz4.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-$os_patch_level-boot-lz4.img
+          #cp ./boot-lz4.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot-lz4.img
          
       - name: Upload compiled assets (complete package)
         if: ${{ !inputs.onlyAk3 }}
