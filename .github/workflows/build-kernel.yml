@@ -9,7 +9,8 @@ on:
         type: choice
         options:
           - "89"
-        default: "89"
+          - "92"
+        default: "92"
       kernelsu_variant:
         description: "Select KernelSU"
         required: true
@@ -26,7 +27,7 @@ on:
         options:
           - Stable
           - Dev
-        default: Dev
+        default: Stable
       use_kpm:
         description: 'Do you want to enable the KPM function?'
         required: true
@@ -358,37 +359,25 @@ jobs:
          sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
          sudo sed -i 's/-4k/-#NotFound/g' ./common/arch/arm64/configs/gki_defconfig
 
-      - name: Build with retry
+      - name: 🔨  Build Kernel
         run: |
-      
-          #sed -i 's/BUILD_SYSTEM_DLKM=1/BUILD_SYSTEM_DLKM=0/' common/build.config.gki.aarch64
-          #sed -i '/MODULES_ORDER=android\/gki_aarch64_modules/d' common/build.config.gki.aarch64
-          #sed -i '/KMI_SYMBOL_LIST_STRICT_MODE/d' common/build.config.gki.aarch64
-          #sed -i 's/-dirty//' common/scripts/setlocalversion
-            
           cd "$CONFIG/common"
           export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH"
-          #export PATH="$GITHUB_WORKSPACE/$CONFIG/gcc/bin:$PATH"
-          #export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/kernel-build-tools/linux-x86/bin:$PATH"
-
-          COMMON_MAKE_PARAMS=(
-            -j$(nproc --all)
-            O=out
-            ARCH=arm64
-            LLVM=1
-            CROSS_COMPILE=aarch64-linux-gnu-
-          )
           
-          #make "${COMMON_MAKE_PARAMS[@]}" gki_defconfig || { echo "make defconfig failed"; exit 1; }
-          #make "${COMMON_MAKE_PARAMS[@]}" Image || { echo "make failed"; exit 1; }
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig || { echo "make defconfig failed"; exit 1; }
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  Image || { echo "make failed"; exit 1; }
 
-          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig
-          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  Image
-          
-          mkdir -p ../bazel-bin/common/kernel_aarch64/
-          strings out/arch/arm64/boot/Image | grep 'Linux version'
-          cp ./out/arch/arm64/boot/Image* ../bazel-bin/common/kernel_aarch64/
-
+      - name: Apply KPM Patch
+        if: ${{ inputs.use_kpm && inputs.kernelsu_variant == 'SukiSU' }}
+        run: |  
+          cd "$CONFIG/out/arch/arm64/boot"
+          TAG=$(curl -s https://api.github.com/repos/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases | \jq -r 'map(select(.prerelease)) | first | .tag_name')
+          echo "Latest tag is: $TAG"
+          curl -Ls -o patch_linux "https://github.com/SukiSU-Ultra/SukiSU_KernelPatch_patch/releases/download/$TAG/patch_linux"
+          chmod +x patch_linux
+          ./patch_linux
+          rm -f Image
+          mv oImage Image
           
       - name: Create Bootimgs Folder and Copy Images
         run: |
@@ -463,7 +452,7 @@ jobs:
             *.zip
             *.img
 
-      - name: Upload compiled assets (AK3 only)
+      - name: Upload AnyKernel3 (AK3 only)" 
         if: ${{ inputs.onlyAk3 }}
         uses: actions/upload-artifact@v4
         with:
