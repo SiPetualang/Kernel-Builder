@@ -410,10 +410,10 @@ jobs:
           mkdir bootimgs
 
           echo "Creating bootimgs folder and copying images..."
-          cp ./$CONFIG/bazel-bin/common/kernel_aarch64/Image ./bootimgs
-          cp ./$CONFIG/bazel-bin/common/kernel_aarch64/Image ./
-          #cp ./$CONFIG/bazel-bin/common/kernel_aarch64/Image.lz4 ./bootimgs
-          #cp ./$CONFIG/bazel-bin/common/kernel_aarch64/Image.lz4 ./
+          cp ./$CONFIG/common/out/arch/arm64/boot/Image ./bootimgs
+          cp ./$CONFIG/common/out/arch/arm64/boot/Image ./
+          #cp ./$CONFIG/common/out/arch/arm64/boot/Image.lz4 ./bootimgs
+          #cp ./$CONFIG/common/out/arch/arm64/boot/Image.lz4 ./
 
           # Create gzip of the Image file
           gzip -n -k -f -9 ./Image > ./Image.gz
