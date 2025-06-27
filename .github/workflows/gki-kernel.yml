@@ -477,7 +477,7 @@ jobs:
             *.zip
             *.img
 
-      - name: Upload AnyKernel3 (AK3 only)" 
+      - name: Upload AnyKernel3 (AK3 only)
         if: ${{ inputs.onlyAk3 }}
         uses: actions/upload-artifact@v4
         with:
