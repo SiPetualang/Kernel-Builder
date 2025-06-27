@@ -25,6 +25,9 @@ on:
       kernelsu_branch:
         required: true
         type: string
+      use_zram:
+        required: true
+        type: boolean
       use_kpm:
         required: true
         type: boolean
@@ -276,6 +279,42 @@ jobs:
             cp ../../kernel_patches/69_hide_stuff.patch ./
             patch -p1 -F 3 < 69_hide_stuff.patch
           fi
+
+      - name: 🔧 Update compression algorithms LZ4+ZSTD
+        if: ${{ inputs.use_zram }}
+        run: |
+          cd "$CONFIG/common"
+          
+          # Update LZ4 implementation
+          curl -sSLO https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/lib/lz4/lz4_decompress.c
+          curl -sSLO https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/lib/lz4/lz4defs.h
+          curl -sSLO https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/lib/lz4/lz4_compress.c
+          curl -sSLO https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/lib/lz4/lz4hc_compress.c
+          
+          # Update ZSTD implementation
+          zstd_base="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/lib/zstd"
+          mkdir -p lib/zstd && cd lib/zstd
+          curl -sSL $zstd_base/zstd_common_module.c -o common.c
+          curl -sSL $zstd_base/compress/zstd_compress_module.c -o compress.c
+          curl -sSL $zstd_base/decompress/zstd_decompress_module.c -o decompress.c
+          curl -sSL $zstd_base/zstd_compat.h -o compat.h
+
+      - name: 🔧 LZ4+ZSTD Configuration
+        if: ${{ inputs.use_zram }}
+        run: |
+          # Enable advanced compression support
+          echo "CONFIG_CRYPTO_LZ4=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CRYPTO_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_CRYPTO_ZSTD=y" >> ./common/arch/arm64/configs/gki_defconfig
+          
+          # File system level compression support
+          echo "CONFIG_F2FS_FS_COMPRESSION=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_F2FS_FS_LZ4=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_F2FS_FS_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_F2FS_FS_ZSTD=y" >> ./common/arch/arm64/configs/gki_defconfig
+          
+          # Kernel image compression configuration
+          echo "CONFIG_KERNEL_LZ4=y" >> ./common/arch/arm64/configs/gki_defconfig
           
       - name: Add Configuration Settings
         run: |
@@ -284,7 +323,7 @@ jobs:
 
           # Add KSU configuration settings
           echo "CONFIG_KSU=y" >> ./common/arch/arm64/configs/gki_defconfig
-
+          
           if [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
             echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
@@ -336,6 +375,8 @@ jobs:
           
           # Remove check_defconfig
           sed -i 's/check_defconfig//' ./common/build.config.gki
+          cd common
+          git add -A && git commit -a -m "BUILD Kernel"
 
       - name: Add make name
         run: |
