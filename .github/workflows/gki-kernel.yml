@@ -381,11 +381,11 @@ jobs:
           cd common
           git add -A && git commit -a -m "BUILD Kernel"
 
-      - name: Add make name
-        run: |
-         cd "$CONFIG"
-         sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
-         sudo sed -i 's/-4k/-#NotFound/g' ./common/arch/arm64/configs/gki_defconfig
+      #- name: Change Kernel Name
+      #  run: |
+      #   cd "$CONFIG"
+      #   sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
+      #   sudo sed -i 's/-4k/-#NotFound/g' ./common/arch/arm64/configs/gki_defconfig
 
       - name: 🔨  Build Kernel
         run: |
