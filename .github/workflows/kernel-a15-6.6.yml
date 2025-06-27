@@ -4,26 +4,40 @@ permissions:
   actions: write   # Allows triggering actions
 
 on:
-  workflow_call:  # This allows this workflow to be called from another workflow
+  workflow_dispatch:
     inputs:
       kernelsu_variant:
+        description: "Select KernelSU"
         required: true
-        type: string
+        type: choice
+        options:
+          - Next
+          - MKSU
+          - SukiSU
+        default: SukiSU
       kernelsu_branch:
+        description: "Select KSU branch"
         required: true
-        type: string
+        type: choice
+        options:
+          - Stable
+          - Dev
+        default: Dev
       use_kpm:
         description: 'Do you want to enable the KPM function?'
-        required: false
+        required: true
         type: boolean
+        default: true
       fast:
         description: 'Compilation speedup (experimental): average speedup of 7 minutes'
-        required: false
+        required: true
         type: boolean
+        default: true
       onlyAk3:
         description: 'Only upload the AK3 compressed package? (No boot, faster download)'
         required: false
         type: boolean
+        default: true
 
 jobs:
   build-kernel-a15-6-6-kernelsu-susfs:
