@@ -302,6 +302,9 @@ jobs:
       - name: 🔧 LZ4+ZSTD Configuration
         if: ${{ inputs.use_zram }}
         run: |
+          cd "$CONFIG"
+          echo "Adding LZ4+ZSTD Configuration settings to gki_defconfig..."
+          
           # Enable advanced compression support
           echo "CONFIG_CRYPTO_LZ4=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_CRYPTO_LZ4HC=y" >> ./common/arch/arm64/configs/gki_defconfig
