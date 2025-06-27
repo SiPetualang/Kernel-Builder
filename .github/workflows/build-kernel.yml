@@ -63,6 +63,12 @@ jobs:
       CCACHE_HARDLINK: "true"
 
     steps:
+      - name: Check os patch level
+        run: |
+          if [ "${{ inputs.sub_level }}" == "89" ]; then
+            os_patch_level="2025-06"
+          fi
+          
       - name: Maximize Build Space
         uses: AdityaGarg8/remove-unwanted-software@v5
         with:
@@ -75,11 +81,11 @@ jobs:
           remove-swapfile: 'true'        # Frees ~4 GB
           remove-cached-tools: 'false'   # Avoid unless confirmed safe
           verbose: 'true'                # Enable detailed logging
-
+          
       - name: Set CONFIG Environment Variable
         run: |
           # Set CONFIG dynamically based on inputs values
-          CONFIG="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}"
+          CONFIG="android15-6.6-${{ inputs.sub_level }}"
 
           # Set CONFIG as an environment variable for future steps
           echo "CONFIG=$CONFIG" >> $GITHUB_ENV
@@ -102,9 +108,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.ccache
-          key: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-${{ github.sha }}
+          key: android15-6.6-${{ inputs.sub_level }}-ccache-${{ github.sha }}
           restore-keys: |
-            ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-
+            android15-6.6-${{ inputs.sub_level }}-ccache-
             
       - name: Cache toolchain
         id: cache-toolchain
@@ -154,14 +160,8 @@ jobs:
         run: |
           echo "Cloning AnyKernel3 and other dependencies..."
 
-          # Define the branch names using the inputs values
-          SUSFS_BRANCH="gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}"
-
-          # Debug print the branches
-          echo "Using branch for SUSFS: $SUSFS_BRANCH"
-
           # Clone repositories using the branch names
-          git clone https://github.com/ShirkNeko/susfs4ksu.git -b "$SUSFS_BRANCH"
+          git clone https://github.com/ShirkNeko/susfs4ksu.git -b gki-android15-6.6
           git clone https://github.com/ShirkNeko/SukiSU_patch.git
           git clone https://github.com/MiRinChan/AnyKernel3.git
 
@@ -174,12 +174,9 @@ jobs:
           git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-gnu-6.4.1.git gcc
           ls gcc/bin
 
-          if [ "${{ inputs.sub_level }}" == "89" ]; then
-            os_patch_level="2025-06"
-          fi
           # Initialize and sync kernel source
           echo "Initializing and syncing kernel source..."
-          FORMATTED_BRANCH="${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.os_patch_level }}"
+          FORMATTED_BRANCH="android15-6.6-$os_patch_level"
           $REPO init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-${FORMATTED_BRANCH} --repo-rev=v2.16
           REMOTE_BRANCH=$(git ls-remote https://android.googlesource.com/kernel/common ${FORMATTED_BRANCH})
           DEFAULT_MANIFEST_PATH=.repo/manifests/default.xml
@@ -253,7 +250,7 @@ jobs:
           echo "Applying SUSFS patches..."
 
           # Copy SUSFS patches
-          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
+          cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-android15-6.6.patch ./common/
           cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
           
@@ -283,7 +280,7 @@ jobs:
           fi
 
           cd ../common
-          patch -p1 --fuzz=3 < 50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch || true
+          patch -p1 --fuzz=3 < 50_add_susfs_in_gki-android15-6.6.patch || true
   
       - name: Apply Hooks Patches
         run: |
@@ -399,8 +396,6 @@ jobs:
               sed -i 's/-dirty//' common/scripts/setlocalversion
               CLANG_VERSION="clang-r510928"
 
-              echo "Using Clang version: $CLANG_VERSION for Kernel version: ${{ inputs.kernel_version }}"
-
               cd common
 
               export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/$CLANG_VERSION/bin:$PATH"
@@ -462,7 +457,7 @@ jobs:
           cd ./AnyKernel3
 
           # Create and upload zip for each format
-          ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3.zip"
+          ZIP_NAME="android15-6.6.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3.zip"
           echo "Creating zip file: $ZIP_NAME..."
           mv ../Image ./Image
           
