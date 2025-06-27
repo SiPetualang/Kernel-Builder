@@ -3,14 +3,6 @@ name: Build GKI
 on:
   workflow_dispatch:
     inputs:
-      android_version:
-        required: true
-        type: string
-        default: "android15"
-      kernel_version:
-        required: true
-        type: string
-        default: "6.6"
       sub_level:
         description: "Select sub level"
         required: true
@@ -50,9 +42,6 @@ on:
         required: true
         type: boolean
         default: false
-      #os_patch_level:
-      #  required: true
-      #  type: string
         
 jobs:
   build-kernel-kernelsu-susfs:
@@ -171,8 +160,8 @@ jobs:
           mkdir -p "$CONFIG"
           cd "$CONFIG"
           
-          git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-gnu-6.4.1.git gcc
-          ls gcc/bin
+          #git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-gnu-6.4.1.git gcc
+          #ls gcc/bin
 
           # Initialize and sync kernel source
           echo "Initializing and syncing kernel source..."
@@ -373,7 +362,16 @@ jobs:
          cd "$CONFIG"
          sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
          sudo sed -i 's/-4k/-#NotFound/g' ./common/arch/arm64/configs/gki_defconfig
-         
+
+      - name: 🔨 Build Kernel (构建内核)
+        run: |
+          export PATH="/usr/lib/ccache:$PATH"
+          export PATH="$GITHUB_WORKSPACE/$CONFIG/prebuilts/clang/host/linux-x86/clang-r510928/bin:$PATH"
+          
+          cd common
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  gki_defconfig
+          make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  Image
+          
       - name: Build with retry
         uses: nick-fields/retry@v3
         with:
@@ -383,7 +381,7 @@ jobs:
           command: |
             set -e
             set -x
-            cd "$CONFIG"
+            c
 
             sed -i 's/BUILD_SYSTEM_DLKM=1/BUILD_SYSTEM_DLKM=0/' common/build.config.gki.aarch64
             sed -i '/MODULES_ORDER=android\/gki_aarch64_modules/d' common/build.config.gki.aarch64
