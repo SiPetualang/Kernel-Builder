@@ -32,11 +32,6 @@ on:
         required: true
         type: boolean
         default: true
-      fast:
-        description: 'Compilation speedup (experimental): average speedup of 7 minutes'
-        required: true
-        type: boolean
-        default: true
       onlyAk3:
         description: 'Only upload the AK3 compressed package? (No boot, faster download)'
         required: true
