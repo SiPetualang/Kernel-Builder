@@ -29,11 +29,6 @@ on:
         required: true
         type: boolean
         default: true
-      get_manager:
-        description: 'Do you want to get the latest KSU manager at the same time? (Experimental function, please close if error is reported)'
-        required: false
-        type: boolean
-        default: false
       fast:
         description: 'Compilation speedup (experimental): average speedup of 7 minutes'
         required: true
@@ -55,9 +50,3 @@ jobs:
       use_kpm: ${{ inputs.use_kpm }}
       fast: ${{ inputs.fast }}
       onlyAk3: ${{ inputs.onlyAk3 }}
- get-ksu-manager:
-    if: ${{ inputs.get_manager }}
-    uses: ./.github/workflows/get-manager.yml
-    secrets: inherit
-    with:
-      kernelsu_variant: ${{ inputs.kernelsu_variant }}
