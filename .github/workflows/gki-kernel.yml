@@ -3,6 +3,21 @@ name: Build GKI
 on:
   workflow_dispatch:
     inputs:
+      android_version:
+        required: true
+        type: string
+        default: "android15"
+      kernel_version:
+        required: true
+        type: string
+        default: "6.6"
+      sub_level:
+        description: "Select sub level"
+        required: true
+        type: choice
+        options:
+          - "89"
+        default: "89"
       kernelsu_variant:
         description: "Select KernelSU"
         required: true
@@ -20,13 +35,6 @@ on:
           - Stable
           - Dev
         default: Dev
-      sub_level:
-        description: "Select sub level"
-        required: true
-        type: choice
-        options:
-          - "89"
-        default: "89"
       use_kpm:
         description: 'Do you want to enable the KPM function?'
         required: true
@@ -42,20 +50,9 @@ on:
         required: true
         type: boolean
         default: false
-      android_version:
-        required: true
-        type: string
-        default: "android15"
-      kernel_version:
-        required: true
-        type: string
-        default: "6.6"
       #os_patch_level:
       #  required: true
       #  type: string
-      revision:
-        required: false
-        type: string
         
 jobs:
   build-kernel-kernelsu-susfs:
