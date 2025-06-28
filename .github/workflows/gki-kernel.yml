@@ -31,6 +31,9 @@ on:
       use_kpm:
         required: true
         type: boolean
+      fast:
+        required: true
+        type: boolean
       onlyAk3:
         required: true
         type: boolean
