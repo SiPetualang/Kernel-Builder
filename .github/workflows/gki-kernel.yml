@@ -34,7 +34,7 @@ on:
       fast:
         required: true
         type: boolean
-      useImage:
+      use_Image:
         required: true
         type: boolean
       onlyAk3:
@@ -480,7 +480,7 @@ jobs:
           #cp ./boot-lz4.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot-lz4.img
 
       - name: "Pack kernel image"
-        if: ${{ env.useImage == 'true' }}
+        if: ${{ inputs.use_Image }}
         run: | 
           curl -LO https://raw.githubusercontent.com/TheWildJames/Android_Kernel_Tutorials/gki-2.0/tools/magiskboot
           chmod +x ./magiskboot
@@ -495,7 +495,7 @@ jobs:
           #cp -f ./wrap_kernel/new-boot.img ./bootimgs/image-${{ env.KERNEL_NAME }}-${{ env.KERNEL_DEVICE_VENDOR }}-${{ env.KERNEL_DEVICE }}-${{ env.builddate }}.img
       
       - name: "Upload image"
-        if: ${{ env.useImage == 'true' }}
+        if: ${{ inputs.use_Image }}
         uses: actions/upload-artifact@v4
         with:
           name: "new-boot"
