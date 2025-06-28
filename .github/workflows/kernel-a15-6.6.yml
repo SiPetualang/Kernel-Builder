@@ -40,7 +40,7 @@ on:
         type: boolean
         default: false
       use_Image:
-        description: 'Compilation speedup (experimental): average speedup of 7 minutes'
+        description: 'Do you want to enable repack boot.img?'
         required: false
         type: boolean
         default: false
