@@ -235,12 +235,19 @@ jobs:
           if [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
             echo "Applying SUSFS patches for KernelSU-Next..."
             cd ./KernelSU-Next
-            if [ "$BRANCH" == "-s next" ]; then
-              cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
-              patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch || true
-              curl -LSs https://github.com/zzh20188/GKI_KernelSU_SUSFS/raw/refs/heads/dev/FIX_NEXT.SUSFS.patch -o FIX_NEXT.SUSFS.patch 
-              patch -p1 --forward --fuzz=3 < FIX_NEXT.SUSFS.patch 
-            fi
+            cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
+            patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch || true
+            cp ../../kernel_patches/next/fix_apk_sign.c.patch ./
+            patch -p1 --forward --fuzz=3 < fix_apk_sign.c.patch
+            cp ../../kernel_patches/next/fix_core_hook.c.patch ./
+            patch -p1 --forward --fuzz=3 < fix_core_hook.c.patch
+            cp ../../kernel_patches/next/fix_selinux.c.patch ./
+            patch -p1 --forward --fuzz=3 < fix_selinux.c.patch
+            cp ../../kernel_patches/next/fix_ksud.c.patch ./
+            patch -p1 --forward --fuzz=3 < fix_ksud.c.patch
+            #cp ../../kernel_patches/next/fix_sucompat.c.patch ./
+            #patch -p1 --forward --fuzz=3 < fix_sucompat.c.patch
+            #sed -i '/bool ksu_devpts_hook = false;/d' ./kernel/sucompat.c
           elif [ "${{ inputs.kernelsu_variant }}" == "MKSU" ]; then
             echo "Applying SUSFS patches for MKSU..."
             cd ./KernelSU
