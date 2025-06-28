@@ -482,7 +482,7 @@ jobs:
       - name: "Pack kernel image"
         if: ${{ inputs.use_Image }}
         run: | 
-          curl -LO https://raw.githubusercontent.com/TheWildJames/Android_Kernel_Tutorials/gki-2.0/tools/magiskboot
+          curl -LO https://raw.githubusercontent.com/SiPetualang/Kernel_Builder/main/tools/magiskboot
           chmod +x ./magiskboot
           cd bootimgs
           curl -LO https://github.com/SiPetualang/Kernel_Builder/releases/download/cloud/boot.img
