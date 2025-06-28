@@ -465,7 +465,7 @@ jobs:
           $MKBOOTIMG --header_version 4 --kernel Image --output boot.img
           $AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
           cp ./boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
-
+          
           #echo "Building boot-gz.img"
           #$MKBOOTIMG --header_version 4 --kernel Image.gz --output boot-gz.img
           #$AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-gz.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
@@ -475,7 +475,28 @@ jobs:
           #$MKBOOTIMG --header_version 4 --kernel Image.lz4 --output boot-lz4.img
           #$AVBTOOL add_hash_footer --partition_name boot --partition_size $((64 * 1024 * 1024)) --image boot-lz4.img --algorithm SHA256_RSA2048 --key $BOOT_SIGN_KEY_PATH
           #cp ./boot-lz4.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot-lz4.img
-         
+
+      - name: "Pack kernel image"
+        if: ${{ env.useImage == 'true' }}
+        run: | 
+          curl -LO https://raw.githubusercontent.com/TheWildJames/Android_Kernel_Tutorials/gki-2.0/tools/magiskboot
+          chmod +x ./magiskboot
+          cd bootimgs
+          curl -LO https://github.com/SiPetualang/Kernel_Builder/releases/download/cloud/boot.img
+          ../magiskboot unpack boot.img
+          rm -rf ./kernel
+          mv ../bootimgs/Image ./kernel
+          ../magiskboot repack boot.img
+          
+          #cp -f ./wrap_kernel/new-boot.img ./bootimgs/image-${{ env.KERNEL_NAME }}-${{ env.KERNEL_DEVICE_VENDOR }}-${{ env.KERNEL_DEVICE }}-${{ env.builddate }}.img
+      
+      - name: "Upload image"
+        if: ${{ env.useImage == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: "new-boot"
+          path: "bootimgs/new-boot.img"
+      
       - name: Upload compiled assets (complete package)
         if: ${{ !inputs.onlyAk3 }}
         uses: actions/upload-artifact@v4
