@@ -39,6 +39,11 @@ on:
         required: false
         type: boolean
         default: false
+      use_Image:
+        description: 'Compilation speedup (experimental): average speedup of 7 minutes'
+        required: false
+        type: boolean
+        default: false
       onlyAk3:
         description: 'Only upload the AK3 compressed package? (No boot, faster download)'
         required: false
@@ -66,6 +71,7 @@ jobs:
       kernelsu_variant: ${{ inputs.kernelsu_variant }}
       kernelsu_branch: ${{ inputs.kernelsu_branch }}
       use_zram: ${{ inputs.use_kpm }}
+      use_Image: ${{ inputs.useImage }}
       use_kpm: ${{ inputs.use_zram }}
       fast: ${{ inputs.fast }}
       onlyAk3: ${{ inputs.onlyAk3 }}
