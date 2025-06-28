@@ -31,7 +31,7 @@ on:
         default: false
       use_kpm:
         description: 'Do you want to enable the KPM function?'
-        required: true
+        required: false
         type: boolean
         default: false
       fast:
@@ -41,7 +41,7 @@ on:
         default: false
       onlyAk3:
         description: 'Only upload the AK3 compressed package? (No boot, faster download)'
-        required: true
+        required: false
         type: boolean
         default: false
 
