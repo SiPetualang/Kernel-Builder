@@ -176,8 +176,6 @@ jobs:
               echo "BRANCH=-s susfs-main" >> $GITHUB_ENV
             elif [[ "${{ inputs.kernelsu_variant }}" == "Next" ]]; then
               echo "BRANCH=-s next" >> $GITHUB_ENV
-            else
-              echo "BRANCH=-" >> $GITHUB_ENV
             fi
           elif [[ "${{ inputs.kernelsu_branch }}" == "Dev" ]]; then
             if [[ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]]; then
@@ -186,14 +184,12 @@ jobs:
               echo "BRANCH=-s next" >> $GITHUB_ENV
             elif [[ "${{ inputs.kernelsu_variant }}" =~ ^(KSU|MKSU)$ ]]; then
               echo "BRANCH=-s main" >> $GITHUB_ENV
-            else
-              echo "Error: Variant of development branch not defined ${{ inputs.kernelsu_variant }}" >&2
-              exit 1
+            fi
           else
             echo "Error: No parameters provided when custom branch required" >&2
             exit 1
           fi
-
+          
       - name: Add KernelSU
         run: |
           cd "$CONFIG"
