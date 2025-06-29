@@ -391,6 +391,34 @@ jobs:
       #   sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
       #   sudo sed -i 's/-4k/-#NotFound/g' ./common/arch/arm64/configs/gki_defconfig
 
+      - name: 配置内核名称
+        run: |
+          cd "$CONFIG"
+
+          CURRENT_TIME=$(date -u +"%a %b %d %H:%M:%S UTC %Y")
+          perl -pi -e "s{UTS_VERSION=\"\\\$\(echo \\\$UTS_VERSION \\\$CONFIG_FLAGS \\\$TIMESTAMP \\| cut -b -\\\$UTS_LEN\)\"}{UTS_VERSION=\"#1 SMP PREEMPT $CURRENT_TIME\"}" ./common/scripts/mkcompile_h
+          
+          if [ "${{ inputs.fast }}" != "true" ]; then
+            sed -i 's/build-timestamp = $(or $(KBUILD_BUILD_TIMESTAMP), $(build-timestamp-auto))/build-timestamp = "$CURRENT_TIME"/' ./common/init/Makefile
+            sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' ./common/BUILD.bazel
+            rm -rf ./common/android/abi_gki_protected_exports_*
+            sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
+            # sed -E -i '/^CONFIG_LOCALVERSION=/ s/(.*)"$/\1"/' ./common/arch/arm64/configs/gki_defconfig
+            if [ ! -z ${{ inputs.version }} ]; then
+              sed -i '/^CONFIG_LOCALVERSION=/ s/="\([^"]*\)"/="/' ./common/arch/arm64/configs/gki_defconfig
+            fi
+          else
+            Android="-android15-8-g"
+            Random_hash=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 12)
+            Suffix="-ab$(shuf -i 13200000-13299999 -n 1)-4k"
+            Kversion="${Android}${Random_hash}-4k"
+            
+            sed -i "\$s|echo \"\$res\"|echo \"$Kversion\"|" ./common/scripts/setlocalversion
+          fi
+          
+          echo "KVERSION=$Kversion" >> $GITHUB_ENV
+          tail -n 3 ./common/scripts/setlocalversion
+          
       - name: 🔨  Build Kernel
         run: |
           cd "$CONFIG/common"
