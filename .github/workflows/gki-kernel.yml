@@ -168,49 +168,40 @@ jobs:
           # Sync repo and apply patches
           $REPO --version
           $REPO --trace sync -c -j$(nproc --all) --no-tags --fail-fast
-      
+
       - name: Determine the branch for KernelSU
         run: |
-
-          branch_input="${{ inputs.kernelsu_branch }}"
-          variant_input="${{ inputs.kernelsu_variant }}"
-
-          case "$branch_input" in
-            "Stable")
-              case "$variant_input" in
-                "Next")
-                  echo "BRANCH=-s next" >> $GITHUB_ENV
-                  ;;
-                "SukiSU")
-                  echo "BRANCH=-s susfs-main" >> $GITHUB_ENV
-                  ;;
-                *)
-                  echo "BRANCH=-" >> $GITHUB_ENV
-                  ;;
-              esac
-              ;;
-            "Dev")
-              case "$variant_input" in
-                "MKSU") echo "BRANCH=-s main" >> $GITHUB_ENV ;;
-                "Next")              echo "BRANCH=-s next" >> $GITHUB_ENV ;;
-                "SukiSU")           echo "BRANCH=-s susfs-main" >> $GITHUB_ENV ;;
-                *) 
-                  echo "Error: Variant of development branch not defined '$variant_input'" >&2
-                  exit 1
-                  ;;
-              esac
-              ;;
-            *)
-              echo "Error: No parameters provided when custom branch required" >&2
+          if [[ "${{ inputs.kernelsu_branch }}" == "Stable" ]]; then
+            if [[ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]]; then
+              echo "BRANCH=-s susfs-main" >> $GITHUB_ENV
+            elif [[ "${{ inputs.kernelsu_variant }}" == "Next" ]]; then
+              echo "BRANCH=-s next" >> $GITHUB_ENV
+            else
+              echo "BRANCH=-" >> $GITHUB_ENV
+            fi
+          elif [[ "${{ inputs.kernelsu_branch }}" == "Dev" ]]; then
+            if [[ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]]; then
+              echo "BRANCH=-s susfs-main" >> $GITHUB_ENV
+            elif [[ "${{ inputs.kernelsu_variant }}" == "Next" ]]; then
+              echo "BRANCH=-s next" >> $GITHUB_ENV
+            elif [[ "${{ inputs.kernelsu_variant }}" =~ ^(KSU|MKSU)$ ]]; then
+              echo "BRANCH=-s main" >> $GITHUB_ENV
+            else
+              echo "Error: Variant of development branch not defined ${{ inputs.kernelsu_variant }}" >&2
               exit 1
-              ;;
-          esac
+          else
+            echo "Error: No parameters provided when custom branch required" >&2
+            exit 1
+          fi
 
       - name: Add KernelSU
         run: |
           cd "$CONFIG"
 
-          if [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
+          if [ "${{ inputs.kernelsu_variant }}" == "Official" ]; then
+            echo "Adding KernelSU Official..."
+            curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash ${{ env.BRANCH }}
+          elif [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
             echo "Adding KernelSU Next..."
             curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash $BRANCH
           elif [ "${{ inputs.kernelsu_variant }}" == "MKSU" ]; then
@@ -231,9 +222,14 @@ jobs:
           cp ../susfs4ksu/kernel_patches/50_add_susfs_in_gki-${{ inputs.android_version }}-${{ inputs.kernel_version }}.patch ./common/
           cp ../susfs4ksu/kernel_patches/fs/* ./common/fs/
           cp ../susfs4ksu/kernel_patches/include/linux/* ./common/include/linux/
-          
-          if [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
-            echo "Applying SUSFS patches for KernelSU-Next..."
+
+          if [ "${{ inputs.kernelsu_variant }}" == "Official" ]; then
+            echo "Applying SUSFS patches for Official KernelSU..."
+            cd ./KernelSU
+            cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
+            patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch
+          elif [ "${{ inputs.kernelsu_variant }}" == "Next" ]; then
+            echo "Applying SUSFS patches for KernelSU Next..."
             cd ./KernelSU-Next
             cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
             patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch || true
@@ -253,12 +249,16 @@ jobs:
             cd ./KernelSU
             cp ../../susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch ./
             patch -p1 --forward --fuzz=3 < 10_enable_susfs_for_ksu.patch || true
-            curl -LSs https://github.com/zzh20188/GKI_KernelSU_SUSFS/raw/refs/heads/dev/core_hook.c.patch -o core_hook.c.patch
-            patch -p1 --fuzz=3 < core_hook.c.patch
+
+            echo "Applying MKSU specific SUSFS patch..."
+            cp ../../kernel_patches/mksu/mksu_susfs.patch ./
+            patch -p1 < mksu_susfs.patch || true
+            cp ../../kernel_patches/mksu/fix.patch ./
+            patch -p1 < fix.patch || true
           elif [ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]; then
             echo "Applying SUSFS patches for SukiSU..."
             cd ./KernelSU
-            echo "Applying SukiSU specific SUSFS patch..."
+            #echo "Applying SukiSU specific SUSFS patch..."
           else
             echo "Invalid KernelSU variant selected!"
             exit 1
@@ -345,9 +345,7 @@ jobs:
             echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
           elif [ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]; then
-            echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_KALLSYMS=y" >> ./common/arch/arm64/configs/gki_defconfig
-            echo "CONFIG_KALLSYMS_ALL=y" >> ./common/arch/arm64/configs/gki_defconfig
+            #echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           elif [ "${{ inputs.kernelsu_variant }}" == "MKSU" ]; then
@@ -368,15 +366,13 @@ jobs:
           echo "CONFIG_TCP_CONG_BBR=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_NET_SCH_FQ=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_TCP_CONG_CUBIC=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_DEFAULT_TCP_CONG=bbr" >> ./common/arch/arm64/configs/gki_defconfig
 
           # Add SUSFS configuration settings
           echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
