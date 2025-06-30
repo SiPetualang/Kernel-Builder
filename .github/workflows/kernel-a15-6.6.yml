@@ -64,7 +64,7 @@ jobs:
       os_patch_level: ${{ matrix.os_patch_level }}
       kernelsu_variant: ${{ inputs.kernelsu_variant }}
       kernelsu_branch: ${{ inputs.kernelsu_branch }}
-      use_zram: ${{ inputs.use_kpm }}
+      use_zram: ${{ inputs.use_zram }}
       use_Image: ${{ inputs.use_Image }}
-      use_kpm: ${{ inputs.use_zram }}
+      use_kpm: ${{ inputs.use_kpm }}
       fast: ${{ inputs.fast }}
