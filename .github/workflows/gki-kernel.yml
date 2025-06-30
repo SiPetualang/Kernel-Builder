@@ -407,8 +407,9 @@ jobs:
           ../magiskboot unpack test.img
           rm -rf ./kernel
           mv ../bootimgs/Image ./kernel
+          ../magiskboot_x86 repack test.img
           cd ..
-          cp -f ./bootimgs/new-boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
+          cp -f ./new-boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
       - name: Upload AnyKernel3 +  Image
         if: ${{ inputs.use_Image }}
