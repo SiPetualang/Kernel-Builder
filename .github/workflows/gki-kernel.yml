@@ -37,9 +37,6 @@ on:
       use_Image:
         required: true
         type: boolean
-      onlyAk3:
-        required: true
-        type: boolean
         
 jobs:
   build-kernel-kernelsu-susfs:
