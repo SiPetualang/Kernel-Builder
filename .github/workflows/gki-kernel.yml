@@ -408,7 +408,7 @@ jobs:
           mv ../bootimgs/Image ./kernel
           cp -f ./bootimgs/new-boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
-      - name: 上传编译资产 (完整包)
+      - name: Upload AnyKernel3 +  Image
         if: ${{ inputs.use_Image }}
         uses: actions/upload-artifact@v4
         with:
