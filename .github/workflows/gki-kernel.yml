@@ -409,7 +409,7 @@ jobs:
           mv ../bootimgs/Image ./kernel
           ../magiskboot repack test.img
           cd ..
-          cp -f ./new-boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
+          cp -f ./bootimgs/new-boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
       - name: Upload AnyKernel3 +  Image
         if: ${{ inputs.use_Image }}
