@@ -45,12 +45,7 @@ on:
         required: false
         type: boolean
         default: false
-      onlyAk3:
-        description: 'Only upload the AK3 compressed package? (No boot, faster download)'
-        required: false
-        type: boolean
-        default: false
-
+        
 jobs:
   build-kernel-a15-6-6-kernelsu-susfs:
     strategy:
