@@ -68,4 +68,3 @@ jobs:
       use_Image: ${{ inputs.use_Image }}
       use_kpm: ${{ inputs.use_zram }}
       fast: ${{ inputs.fast }}
-      onlyAk3: ${{ inputs.onlyAk3 }}
