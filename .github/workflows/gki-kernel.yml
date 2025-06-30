@@ -73,7 +73,6 @@ jobs:
 
           echo "CONFIG set to: $CONFIG"
 
-      # Install ccache
       - name: Install ccache
         run: sudo apt update && sudo apt upgrade -y && sudo apt install -y ccache python3 git curl build-essential libssl-dev bison flex libelf-dev dwarves
 
@@ -93,42 +92,6 @@ jobs:
           restore-keys: |
             ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}-ccache-
             
-      - name: Cache toolchain
-        id: cache-toolchain
-        uses: actions/cache@v4
-        with:
-          path: |
-            kernel-build-tools
-            mkbootimg
-          key: toolchain-${{ runner.os }}-v1
-
-      # Step 2: Download toolchain if cache was not found
-      - name: Download toolchain (if cache not found)
-        if: steps.cache-toolchain.outputs.cache-hit != 'true'
-        run: |
-          AOSP_MIRROR=https://android.googlesource.com
-          BRANCH=main-kernel-build-2024
-          git clone $AOSP_MIRROR/kernel/prebuilts/build-tools -b $BRANCH --depth 1 kernel-build-tools
-          git clone $AOSP_MIRROR/platform/system/tools/mkbootimg -b $BRANCH --depth 1 mkbootimg
-
-      - name: Set environment variables
-        run: |
-          echo "AVBTOOL=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/bin/avbtool" >> $GITHUB_ENV
-          echo "MKBOOTIMG=$GITHUB_WORKSPACE/mkbootimg/mkbootimg.py" >> $GITHUB_ENV
-          echo "UNPACK_BOOTIMG=$GITHUB_WORKSPACE/mkbootimg/unpack_bootimg.py" >> $GITHUB_ENV
-
-      - name: Set boot sign key
-        env:
-          BOOT_SIGN_KEY: ${{ secrets.BOOT_SIGN_KEY }}
-        run: |
-          if [ ! -z "$BOOT_SIGN_KEY" ]; then
-            echo "$BOOT_SIGN_KEY" > ./kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-            echo "BOOT_SIGN_KEY_PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem" >> $GITHUB_ENV
-          else
-            openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 > ./kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem
-            echo "BOOT_SIGN_KEY_PATH=$GITHUB_WORKSPACE/kernel-build-tools/linux-x86/share/avb/testkey_rsa2048.pem" >> $GITHUB_ENV
-          fi
-          
       - name: Install Repo
         run: |
           # Install dependencies
@@ -368,7 +331,7 @@ jobs:
           # Add SUSFS configuration settings
           echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
-          echo "CONFIG_KSU_SUSFS_SUS_PATH=n" >> ./common/arch/arm64/configs/gki_defconfig
+          echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -389,35 +352,7 @@ jobs:
       #  run: |
       #   cd "$CONFIG"
       #   sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
-      #   sudo sed -i 's/-4k/-#NotFound/g' ./common/arch/arm64/configs/gki_defconfig
-
-      - name: 配置内核名称
-        run: |
-          cd "$CONFIG"
-
-          CURRENT_TIME=$(date -u +"%a %b %d %H:%M:%S UTC %Y")
-          perl -pi -e "s{UTS_VERSION=\"\\\$\(echo \\\$UTS_VERSION \\\$CONFIG_FLAGS \\\$TIMESTAMP \\| cut -b -\\\$UTS_LEN\)\"}{UTS_VERSION=\"#1 SMP PREEMPT $CURRENT_TIME\"}" ./common/scripts/mkcompile_h
-          
-          if [ "${{ inputs.fast }}" != "true" ]; then
-            sed -i 's/build-timestamp = $(or $(KBUILD_BUILD_TIMESTAMP), $(build-timestamp-auto))/build-timestamp = "$CURRENT_TIME"/' ./common/init/Makefile
-            sed -i '/^[[:space:]]*"protected_exports_list"[[:space:]]*:[[:space:]]*"android\/abi_gki_protected_exports_aarch64",$/d' ./common/BUILD.bazel
-            rm -rf ./common/android/abi_gki_protected_exports_*
-            sed -i "/stable_scmversion_cmd/s/-maybe-dirty//g" ./build/kernel/kleaf/impl/stamp.bzl
-            # sed -E -i '/^CONFIG_LOCALVERSION=/ s/(.*)"$/\1"/' ./common/arch/arm64/configs/gki_defconfig
-            if [ ! -z ${{ inputs.version }} ]; then
-              sed -i '/^CONFIG_LOCALVERSION=/ s/="\([^"]*\)"/="/' ./common/arch/arm64/configs/gki_defconfig
-            fi
-          else
-            Android="-android15-8-g"
-            Random_hash=$(cat /dev/urandom | tr -dc 'a-z0-9' | head -c 12)
-            Suffix="-ab$(shuf -i 13200000-13299999 -n 1)-4k"
-            Kversion="${Android}${Random_hash}-4k"
-            
-            sed -i "\$s|echo \"\$res\"|echo \"$Kversion\"|" ./common/scripts/setlocalversion
-          fi
-          
-          echo "KVERSION=$Kversion" >> $GITHUB_ENV
-          tail -n 3 ./common/scripts/setlocalversion
+      #   sudo sed -i 's/-4k/-rodin/g' ./common/arch/arm64/configs/gki_defconfig
           
       - name: 🔨  Build Kernel
         run: |
@@ -450,11 +385,6 @@ jobs:
           echo "Creating bootimgs folder and copying images..."
           cp ./$CONFIG/common/out/arch/arm64/boot/Image ./bootimgs
           cp ./$CONFIG/common/out/arch/arm64/boot/Image ./
-          #cp ./$CONFIG/common/out/arch/arm64/boot/Image.lz4 ./bootimgs
-          #cp ./$CONFIG/common/out/arch/arm64/boot/Image.lz4 ./
-
-          # Create gzip of the Image file
-          gzip -n -k -f -9 ./Image > ./Image.gz
 
       - name: Create ZIP Files for Different Formats
         run: |
@@ -469,22 +399,6 @@ jobs:
             rm ./Image
           fi
           
-          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3-lz4.zip"
-          # echo "Creating zip file: $ZIP_NAME..."
-          # mv ../Image.lz4 ./Image.lz4
-          #if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
-          #  zip -r "../$ZIP_NAME" ./*
-          #  rm ./Image.lz4
-          #fi
-          
-          # ZIP_NAME="${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3-gz.zip"
-          # echo "Creating zip file: $ZIP_NAME..."
-          # mv ../Image.gz ./Image.gz
-          #if [ "${{ inputs.onlyAk3 }}" != "true" ]; then
-          #  zip -r "../$ZIP_NAME" ./*
-          #  rm ./Image.gz
-          #fi
-          
       - name: "Pack kernel image"
         if: ${{ inputs.use_Image }}
         run: | 
@@ -495,17 +409,19 @@ jobs:
           ../magiskboot unpack boot.img
           rm -rf ./kernel
           mv ../bootimgs/Image ./kernel
-          ../magiskboot repack boot.img
+          cp -f ./bootimgs/new-boot.img ../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
-      - name: "Upload image"
+      - name: 上传编译资产 (完整包)
         if: ${{ inputs.use_Image }}
         uses: actions/upload-artifact@v4
         with:
-          name: "new-boot"
-          path: "bootimgs/new-boot.img"
-
-      - name: Upload AnyKernel3 (AK3 only)
-        if: ${{ inputs.onlyAk3 }}
+          name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}
+          path: |
+            *.zip
+            *.img
+          
+      - name: Upload AnyKernel3
+        if: ${{ !inputs.use_Image }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}-Anykernel3
