@@ -41,7 +41,7 @@ on:
         type: boolean
         default: false
       use_Image:
-        description: 'Do you want to enable repack boot.img?'
+        description: 'Do you want to enable repack boot image?'
         required: false
         type: boolean
         default: false
