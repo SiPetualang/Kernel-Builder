@@ -233,7 +233,7 @@ jobs:
           elif [ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]; then
             echo "Applying SUSFS patches for SukiSU..."
             cd ./KernelSU
-            for i in {1..3}; doAdd commentMore actions
+            for i in {1..3}; do
             KSU_API_VERSION=$(curl -s "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/susfs-main/kernel/Makefile" | 
               grep -m1 "KSU_VERSION_API :=" | 
               awk -F'= ' '{print $2}' | 
