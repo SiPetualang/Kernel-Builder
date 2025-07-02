@@ -47,7 +47,7 @@ on:
         default: false
         
 jobs:
-  build-kernel-a15-6-6-kernelsu-susfs:
+  build-kernel:
     strategy:
       fail-fast: false
       matrix:
