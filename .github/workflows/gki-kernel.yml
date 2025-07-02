@@ -420,7 +420,7 @@ jobs:
           cp ./bootimgs/new-boot.img ./${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
       - name: Upload AnyKernel3 +  Image
-        if: ${{ inputs.use_Image && !inputs.onlyBoot }}
+        if: ${{ !inputs.onlyBoot }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}
@@ -440,5 +440,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}
-          path: | 
-            *.img
+          path: ${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
