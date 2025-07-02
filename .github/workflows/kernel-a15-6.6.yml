@@ -65,7 +65,6 @@ jobs:
       kernelsu_variant: ${{ inputs.kernelsu_variant }}
       kernelsu_branch: ${{ inputs.kernelsu_branch }}
       use_zram: ${{ inputs.use_zram }}
-      use_Image: ${{ inputs.use_Image }}
       use_kpm: ${{ inputs.use_kpm }}
       onlyAK3: ${{ inputs.onlyAK3 }}
       fast: ${{ inputs.fast }}
