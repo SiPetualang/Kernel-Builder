@@ -40,13 +40,8 @@ on:
         required: false
         type: boolean
         default: false
-      use_Image:
-        description: 'Do you want to enable repack boot image?'
-        required: false
-        type: boolean
-        default: false
-      onlyBoot:
-        description: 'Only upload boot image? (Without AK3)'
+      onlyAK3:
+        description: 'Only upload the AK3 compressed package? (No boot, faster download)'
         required: false
         type: boolean
         default: false
@@ -72,5 +67,5 @@ jobs:
       use_zram: ${{ inputs.use_zram }}
       use_Image: ${{ inputs.use_Image }}
       use_kpm: ${{ inputs.use_kpm }}
-      onlyBoot: ${{ inputs.onlyBoot }}
+      onlyAK3: ${{ inputs.onlyAK3 }}
       fast: ${{ inputs.fast }}
