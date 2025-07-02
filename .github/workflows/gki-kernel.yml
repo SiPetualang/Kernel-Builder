@@ -139,7 +139,7 @@ jobs:
             fi
           elif [[ "${{ inputs.kernelsu_branch }}" == "Dev" ]]; then
             if [[ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]]; then
-              echo "BRANCH=-s susfs-1.5.7" >> $GITHUB_ENV
+              echo "BRANCH=-s susfs-main" >> $GITHUB_ENV
             elif [[ "${{ inputs.kernelsu_variant }}" == "Next" ]]; then
               echo "BRANCH=-s next" >> $GITHUB_ENV
             elif [[ "${{ inputs.kernelsu_variant }}" =~ ^(KSU|MKSU)$ ]]; then
@@ -301,7 +301,11 @@ jobs:
             echo "CONFIG_KSU_KPROBES_HOOK=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
           elif [ "${{ inputs.kernelsu_variant }}" == "SukiSU" ]; then
-            #echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+            if [ "${{ inputs.use_kpm }}" == "true" ]; then
+              echo "CONFIG_KPM=y" >> ./common/arch/arm64/configs/gki_defconfig
+              echo "CONFIG_KALLSYMS=y" >> ./common/arch/arm64/configs/gki_defconfig
+              echo "CONFIG_KALLSYMS_ALL=y" >> ./common/arch/arm64/configs/gki_defconfig
+            fi
             echo "CONFIG_KSU_SUSFS_SUS_SU=n" >> ./common/arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_MANUAL_HOOK=y" >> ./common/arch/arm64/configs/gki_defconfig
           elif [ "${{ inputs.kernelsu_variant }}" == "MKSU" ]; then
@@ -324,6 +328,8 @@ jobs:
           echo "CONFIG_TCP_CONG_BIC=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_WESTWOOD=n" >> ./common/arch/arm64/configs/gki_defconfig
           echo "CONFIG_TCP_CONG_HTCP=n" >> ./common/arch/arm64/configs/gki_defconfig
+          # echo "CONFIG_TCP_CONG_CUBIC=n" >> ./common/arch/arm64/configs/gki_defconfig
+          # echo "CONFIG_DEFAULT_TCP_CONG=bbr" >> ./common/arch/arm64/configs/gki_defconfig
 
           # Add SUSFS configuration settings
           echo "CONFIG_KSU_SUSFS=y" >> ./common/arch/arm64/configs/gki_defconfig
@@ -345,11 +351,11 @@ jobs:
           # Remove check_defconfig
           sed -i 's/check_defconfig//' ./common/build.config.gki
 
-      #- name: Change Kernel Name
-      #  run: |
-      #   cd "$CONFIG"
-      #   sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
-      #   sudo sed -i 's/-4k/-rodin/g' ./common/arch/arm64/configs/gki_defconfig
+      - name: Change Kernel Name
+        run: |
+         cd "$CONFIG"
+         sed -i 's/${scm_version}//' ./common/scripts/setlocalversion
+         sudo sed -i 's/-4k/-SukiSU-Rodin/g' ./common/arch/arm64/configs/gki_defconfig
           
       - name: 🔨  Build Kernel
         run: |
@@ -363,7 +369,7 @@ jobs:
             make -j$(nproc --all) LLVM=1 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- CC="ccache clang" RUSTC=../../prebuilts/rust/linux-x86/1.73.0b/bin/rustc PAHOLE=../../prebuilts/kernel-build-tools/linux-x86/bin/pahole LD=ld.lld HOSTLD=ld.lld O=out KCFLAGS+=-O2  Image || { echo "make failed"; exit 1; }
           fi
           
-      - name: Apply KPM Patch
+      - name: Apply KPM Patch (SukiSU only)
         if: ${{ inputs.use_kpm && inputs.kernelsu_variant == 'SukiSU' }}
         run: |  
           cd "$CONFIG/common/out/arch/arm64/boot"
@@ -402,12 +408,11 @@ jobs:
           curl -LO https://raw.githubusercontent.com/SiPetualang/Kernel_Builder/main/tools/magiskboot
           chmod +x ./magiskboot
           cd bootimgs
-          # curl -LO https://github.com/SiPetualang/Kernel_Builder/releases/download/cloud/boot_EU_6.6.56.img
-          curl -LO https://github.com/SiPetualang/Kernel_Builder/releases/download/cloud/test.img
-          ../magiskboot unpack test.img
+          curl -LO https://github.com/SiPetualang/Kernel_Builder/releases/download/cloud/boot_EU_6.6.56.img
+          ../magiskboot unpack boot_EU_6.6.56.img
           rm -rf ./kernel
           mv ../bootimgs/Image ./kernel
-          ../magiskboot repack test.img
+          ../magiskboot repack boot_EU_6.6.56.img
           cd ..
           cp ./bootimgs/new-boot.img ./${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
