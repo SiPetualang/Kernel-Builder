@@ -34,6 +34,9 @@ on:
       fast:
         required: true
         type: boolean
+      onlyBoot:
+        required: true
+        type: boolean
       use_Image:
         required: true
         type: boolean
@@ -417,7 +420,7 @@ jobs:
           cp ./bootimgs/new-boot.img ./${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
 
       - name: Upload AnyKernel3 +  Image
-        if: ${{ inputs.use_Image }}
+        if: ${{ inputs.use_Image && !inputs.onlyBoot }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}
@@ -426,8 +429,15 @@ jobs:
             *.img
           
       - name: Upload AnyKernel3
-        if: ${{ !inputs.use_Image }}
+        if: ${{ !inputs.use_Image && && !inputs.onlyBoot }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}-Anykernel3
           path: ./AnyKernel3/*
+
+      - name: Upload AnyKernel3
+        if: ${{ inputs.onlyBoot }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}
+          path: ${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-boot.img
