@@ -45,6 +45,11 @@ on:
         required: false
         type: boolean
         default: false
+      onlyBoot:
+        description: 'Only upload boot image? (Without AK3)'
+        required: false
+        type: boolean
+        default: false
         
 jobs:
   build-kernel-a15-6-6-kernelsu-susfs:
@@ -67,4 +72,5 @@ jobs:
       use_zram: ${{ inputs.use_zram }}
       use_Image: ${{ inputs.use_Image }}
       use_kpm: ${{ inputs.use_kpm }}
+      onlyBoot: ${{ inputs.onlyBoot }}
       fast: ${{ inputs.fast }}
