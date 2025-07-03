@@ -3,7 +3,7 @@ name: Build Kernel Release
 permissions:
   contents: write
   actions: write
-
+ss
 on:
   workflow_dispatch:
     inputs:
