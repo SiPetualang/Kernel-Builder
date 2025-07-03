@@ -228,7 +228,7 @@ jobs:
              echo "  - ${{ inputs.kernelsu_variant }}-${{ inputs.kernelsu_branch }}: [${{ env.MKSU_REF }}](${{ env.MKSU_URL }})" >> $GITHUB_ENV
           fi
           echo "- SUSFS4KSU:" >> $GITHUB_ENV
-          echo "  - gki-android15-6.6: [${{ env.COMMIT_HASH_gki_android15_6_6 }}](${{ env.COMMIT_URL_gki_android15_6_6 }}) >> $GITHUB_ENV
+          echo "  - gki-android15-6.6: [${{ env.COMMIT_HASH_gki_android15_6_6 }}](${{ env.COMMIT_URL_gki_android15_6_6 }})" >> $GITHUB_ENV
           echo "" >> $GITHUB_ENV
           echo "</details>" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
