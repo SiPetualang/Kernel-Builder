@@ -87,7 +87,7 @@ jobs:
       - build-kernels
     env:
       REPO_OWNER: SiPetualang
-      REPO_NAME: Kernel_Builde
+      REPO_NAME: Kernel_Builder
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RELEASE_NOTES: |
         > [!CAUTION]
