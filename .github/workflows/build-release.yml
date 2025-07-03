@@ -243,7 +243,7 @@ jobs:
           prerelease: ${{ inputs.release_type == 'Pre-Release' }}
           files: ""
           name: ${{ env.RELEASE_NAME }}
-          body_path: release_body.md
+          body_path: ${{ env.RELEASE_NOTES }}
 
       - name: Upload Release Assets
         run: |
