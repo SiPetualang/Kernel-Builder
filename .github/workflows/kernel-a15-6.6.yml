@@ -5,46 +5,23 @@ permissions:
   actions: write
   
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       kernelsu_variant:
-        description: "Select KernelSU"
         required: true
-        type: choice
-        options:
-          - Official
-          - Next
-          - MKSU
-          - SukiSU
-        default: SukiSU
+        type: string
       kernelsu_branch:
-        description: "Select KSU branch"
         required: true
-        type: choice
-        options:
-          - Stable
-          - Dev
-        default: Dev
+        type: string
       use_zram:
-        description: 'Do you want to enable adding lz4+zstd?'
         required: true
         type: boolean
-        default: false
       use_kpm:
-        description: 'Do you want to enable the KPM function?'
-        required: false
+        required: true
         type: boolean
-        default: false
       fast:
-        description: 'Compilation speedup (experimental): average speedup of 7 minutes'
-        required: false
+        required: true
         type: boolean
-        default: false
-      onlyAK3:
-        description: 'Only upload the AK3 compressed package? (No boot, faster download)'
-        required: false
-        type: boolean
-        default: false
         
 jobs:
   build-kernel:
@@ -66,5 +43,4 @@ jobs:
       kernelsu_branch: ${{ inputs.kernelsu_branch }}
       use_zram: ${{ inputs.use_zram }}
       use_kpm: ${{ inputs.use_kpm }}
-      onlyAK3: ${{ inputs.onlyAK3 }}
       fast: ${{ inputs.fast }}
