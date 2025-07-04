@@ -97,6 +97,7 @@ jobs:
         - Manual Syscall Hooks
         - Wireguard Support
         - BBR Support
+        ${{ inputs.use_kpm && '- KPM Support' || '' }}
 
         Usage: 
           - Use [HorizonKernelFlasher](https://github.com/libxzr/HorizonKernelFlasher). Don't use Kernel Flasher, it is broken.
@@ -135,6 +136,37 @@ jobs:
             fi
           done
 
+      - name: Set KSU Version and Release Name
+        if: ${{ steps.release_check.outcome == 'success' }}
+        run: |
+          # Use temporary directories to avoid conflicts
+          if [ "${{ inputs.kernelsu_variant }}" = "Next" ]; then
+            echo "Processing Next variant"
+            git clone https://github.com/KernelSU-Next/KernelSU-Next.git ksu-next-tmp
+            cd ksu-next-tmp
+            KSU_GIT_VERSION=$(git rev-list --count HEAD)
+            KSU_VERSION=$((10000 + KSU_GIT_VERSION + 200))
+            echo "Next version: $KSU_VERSION"
+            cd ..
+            rm -rf ksu-next-tmp
+            echo "RELEASE_NAME=\"GKI Kernel: KernelSU-Next ($KSU_VERSION) & SUSFS v1.5.8\"" >> $GITHUB_ENV
+            
+          elif [ "${{ inputs.kernelsu_variant }}" = "SukiSU" ]; then
+            echo "Processing SukiSU variant"
+            git clone https://github.com/SukiSU-Ultra/SukiSU-Ultra.git suki-tmp
+            cd suki-tmp
+            KSU_GIT_VERSION=$(git rev-list --count HEAD)
+            KSU_VERSION=$((10000 + KSU_GIT_VERSION + 700))
+            echo "SukiSU version: $KSU_VERSION"
+            cd ..
+            rm -rf suki-tmp
+            echo "RELEASE_NAME=\"GKI Kernel: SukiSU ($KSU_VERSION) & SUSFS v1.5.8\"" >> $GITHUB_ENV
+            
+          else
+            echo "Using default naming for variant: ${{ inputs.kernelsu_variant }}"
+            echo "RELEASE_NAME=\"GKI Kernel: ${{ inputs.kernelsu_variant }} & SUSFS v1.5.8\"" >> $GITHUB_ENV
+          fi
+          
       - name: Get KernelSU variant refs and links
         run: |
           BRANCH="${{ inputs.kernelsu_branch }}"
