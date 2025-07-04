@@ -415,9 +415,10 @@ jobs:
           zip -r "../$ZIP_NAME" ./*
           rm ./Image
 
-      - name: Upload AnyKernel3
-        if: ${{ !inputs.use_Image && !inputs.onlyBoot }}
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.kernelsu_variant }}_kernel-${{ env.CONFIG }}-Anykernel3
-          path: ./AnyKernel3/*
+          name: kernel-${{ env.CONFIG }}
+          path: |
+            *.zip
+            *.img
