@@ -241,7 +241,6 @@ jobs:
         with:
           tag_name: ${{ env.NEW_TAG }}
           prerelease: ${{ inputs.release_type == 'Pre-Release' }}
-          files: ""
           name: ${{ env.RELEASE_NAME }}
           body_path: ${{ env.RELEASE_NOTES }}
 
