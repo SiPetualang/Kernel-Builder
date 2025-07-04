@@ -87,6 +87,7 @@ jobs:
       - build-kernels
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_NAME: ""
       RELEASE_NOTES: |
         > [!CAUTION]
         > Take your own risk! Nobody tested. `fastboot boot` bofore flash it.
