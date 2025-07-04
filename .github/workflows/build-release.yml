@@ -273,7 +273,7 @@ jobs:
         with:
           tag_name: ${{ env.NEW_TAG }}
           prerelease: ${{ inputs.release_type == 'Pre-Release' }}
-          name: ${{ env.RELEASE_NAME }}
+          release_name: ${{ env.RELEASE_NAME }}
           body_path: ${{ env.RELEASE_NOTES }}
 
       - name: Upload Release Assets
