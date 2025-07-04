@@ -138,7 +138,6 @@ jobs:
           done
 
       - name: Set KSU Version and Release Name
-        if: ${{ steps.release_check.outcome == 'success' }}
         run: |
           # Use temporary directories to avoid conflicts
           if [ "${{ inputs.kernelsu_variant }}" = "Next" ]; then
