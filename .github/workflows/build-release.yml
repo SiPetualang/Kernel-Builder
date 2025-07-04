@@ -237,7 +237,7 @@ jobs:
           path: ./downloaded-artifacts
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: actions/create-release@v1
         with:
           tag_name: ${{ env.NEW_TAG }}
           prerelease: ${{ inputs.release_type == 'Pre-Release' }}
