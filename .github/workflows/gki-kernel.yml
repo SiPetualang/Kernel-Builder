@@ -433,7 +433,7 @@ jobs:
             python3 ./bot/script/buildbot.py "./AnyKernel3_SukiSU_Ultra_${{ env.KSUVER }}_${{ github.event.inputs.FEIL }}.zip"
           fi
         env:
-          CHAT_ID: ${{secrets.CHAT_ID}}
+          CHAT_ID: "-100${{secrets.CHAT_ID}}"
           BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           MESSAGE_THREAD_ID: ${{secrets.MESSAGE_THREAD_ID}}
           KernelVer: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}
