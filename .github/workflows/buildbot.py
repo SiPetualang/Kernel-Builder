@@ -3,17 +3,15 @@ import os
 import sys
 from telethon import TelegramClient
 
-API_ID = 7981789383
-API_HASH = "AAHvZ1cC13uRPDs0IzSrKKXLZy2bcwqS2ts"
+API_ID = 27075271
+API_HASH = "f1809f81c3bea88dcd8efda067189539"
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHATID")
 MESSAGE_THREAD_ID = os.environ.get("MESSAGE_THREAD_ID")
-DEVICE = os.environ.get("DEVICE")
 KPM= os.environ.get("KPM")
 MSG_TEMPLATE = """
-**New Build Published!**
-#{device}
+**New Build Published!**./
 ```Kernel Info
 kernelver: {kernelversion}
 KsuVersion: {Ksuver}
