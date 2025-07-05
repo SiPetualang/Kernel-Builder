@@ -420,3 +420,21 @@ jobs:
         with:
           name: kernel-${{ env.CONFIG }}
           path: ./AnyKernel3/*
+
+      - name: 🔨 get bot script (获取 bot 脚本)
+        uses: actions/checkout@v4
+        with:
+         path: bot
+
+      - name: 📤 Upload to telegram (上传至Telegram群组)
+        run: |
+          if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
+            pip3 install telethon
+            python3 ./bot/script/buildbot.py "./AnyKernel3_SukiSU_Ultra_${{ env.KSUVER }}_${{ github.event.inputs.FEIL }}.zip"
+          fi
+        env:
+          CHATID: ${{secrets.CHATID}}
+          BOT_TOKEN: ${{secrets.BOT_TOKEN}}
+          MESSAGE_THREAD_ID: ${{secrets.MESSAGE_THREAD_ID}}
+          KernelVer: ${{ inputs.android_version }}-${{ inputs.kernel_version }}-${{ inputs.sub_level }}
+          KPM: ${{ inputs.use_kpm }}
