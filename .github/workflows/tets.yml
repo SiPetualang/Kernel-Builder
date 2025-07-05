@@ -298,13 +298,12 @@ jobs:
           echo "GitHub release created with the following files:"
           ls ./downloaded-artifacts/**/*
 
-      - name: Send telegram message on push
+      - name: Upload hasil build ke Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
-          #TELEGRAM_MESSAGE_THREAD_ID: ${{ secrets.TELEGRAM_MESSAGE_THREAD_ID }}
         run: |
-          curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
-            -d "chat_id=-100$TELEGRAM_CHAT_ID/61" \
-            -d "text=Latest release
-          https://github.com/SiPetualang/Kernel_Builderrr/releases/tag/${{ env.NEW_TAG }}"
+          curl -F document=@output/kernel.zip \
+               -F chat_id="-100${TELEGRAM_CHAT_ID}" \
+               -F caption="Kernel terbaru sudah rilis!\nhttps://github.com/SiPetualang/Kernel_Builderrr/releases/tag/${{ env.NEW_TAG }}" \
+               "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
