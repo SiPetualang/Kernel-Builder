@@ -3,25 +3,18 @@ import os
 import sys
 from telethon import TelegramClient
 
-API_ID = 611335
-API_HASH = "d524b414d21f4d37f08684c1df41ac9c"
+API_ID = 27075271
+API_HASH = "f1809f81c3bea88dcd8efda067189539"
 
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-CHAT_ID = os.environ.get("CHATID")
+CHAT_ID = os.environ.get("CHAT_ID")
 MESSAGE_THREAD_ID = os.environ.get("MESSAGE_THREAD_ID")
-DEVICE = os.environ.get("DEVICE")
 KPM= os.environ.get("KPM")
-lz4kd= os.environ.get("LZ4KD")
-BBR= os.environ.get("BBR")
 MSG_TEMPLATE = """
 **New Build Published!**
-#{device}
 ```Kernel Info
 kernelver: {kernelversion}
-KsuVersion: {Ksuver}
 KPM: {kpm}
-lz4kd: {Lz4kd} lz4&zstd: {lz4_zstd}
-BBR: {BBR}
 ```
 十分感谢yc佬对本自动推送bot做出的贡献❤️
 """.strip()
@@ -29,15 +22,11 @@ BBR: {BBR}
 
 def get_caption():
     msg = MSG_TEMPLATE.format(
-        device=DEVICE,
         kernelversion=kernelversion,
         kpm=KPM,
-        Lz4kd=lz4kd,
-        Ksuver=ksuver,
-        lz4_zstd=check_lz4_zstd(),
     )
     if len(msg) > 1024:
-        return f"{DEVICE}{kernelversion}"
+        return f"{kernelversion}"
     return msg
 
 
