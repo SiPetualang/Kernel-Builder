@@ -78,7 +78,7 @@ def get_kernel_versions():
 def get_versions():
     global kernelversion,ksuver
     current_work=os.getcwd()
-    os.chdir(current_work+"/kernel_workspace/kernel_platform/common") #除非next
+    os.chdir(current_work+"/android15-6.6-89/common") #除非next
     kernelversion=get_kernel_versions()
     os.chdir(os.getcwd()+"/../KernelSU")
     ksuver=os.popen("echo $(git describe --tags $(git rev-list --tags --max-count=1))-$(git rev-parse --short HEAD)@$(git branch --show-current)").read().strip()
