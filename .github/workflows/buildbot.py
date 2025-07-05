@@ -14,7 +14,7 @@ MSG_TEMPLATE = """
 **New Build Published!**./
 ```Kernel Info
 kernelver: {kernelversion}
-KsuVersion: {Ksuver}
+
 KPM: {kpm}
 ```
 十分感谢yc佬对本自动推送bot做出的贡献❤️
@@ -25,10 +25,9 @@ def get_caption():
     msg = MSG_TEMPLATE.format(
         kernelversion=kernelversion,
         kpm=KPM,
-        Ksuver=ksuver,
     )
     if len(msg) > 1024:
-        return f"{DEVICE}{kernelversion}"
+        return f"{kernelversion}"
     return msg
 
 
