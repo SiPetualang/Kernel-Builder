@@ -304,6 +304,6 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
         run: |
           curl -F document=@output/kernel.zip \
-               -F chat_id="-100${TELEGRAM_CHAT_ID}" \
+               -F chat_id="-100${TELEGRAM_CHAT_ID}/61" \
                -F caption="Kernel terbaru sudah rilis!\nhttps://github.com/SiPetualang/Kernel_Builderrr/releases/tag/${{ env.NEW_TAG }}" \
                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
