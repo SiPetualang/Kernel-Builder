@@ -3,6 +3,8 @@ import os
 import sys
 from telethon import TelegramClient
 
+kernelversion = ""
+ksuver = ""
 API_ID = 27075271
 API_HASH = "f1809f81c3bea88dcd8efda067189539"
 
@@ -20,8 +22,8 @@ KPM: {kpm}
 十分感谢yc佬对本自动推送bot做出的贡献❤️
 """.strip()
 
-
 def get_caption():
+    global kernelversion, KPM
     msg = MSG_TEMPLATE.format(
         kernelversion=kernelversion,
         kpm=KPM,
@@ -29,7 +31,6 @@ def get_caption():
     if len(msg) > 1024:
         return f"{kernelversion}"
     return msg
-
 
 def check_environ():
     global CHAT_ID, MESSAGE_THREAD_ID
