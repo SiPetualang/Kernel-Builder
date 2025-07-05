@@ -431,9 +431,10 @@ jobs:
           if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
             cd AnyKernel3
             zip -q -r "../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3.zip" ./*
-            cd ..
+            cd "$CONFIG"
             pip3 install telethon
             cp "${GITHUB_WORKSPACE}/.github/workflows/buildbot.py" ./
+            chmod + buildbot.py
             python3 ./buildbot.py "./${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3.zip"
           fi
         env:
