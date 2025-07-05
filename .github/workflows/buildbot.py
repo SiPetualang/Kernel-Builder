@@ -23,7 +23,6 @@ KPM: {kpm}
 
 def get_caption():
     msg = MSG_TEMPLATE.format(
-        device=DEVICE,
         kernelversion=kernelversion,
         kpm=KPM,
         Ksuver=ksuver,
