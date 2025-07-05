@@ -413,12 +413,31 @@ jobs:
           echo "Creating zip file: $ZIP_NAME..."
           mv ../Image ./Image
           zip -r "../$ZIP_NAME" ./*
-          rm ./Image
+          #rm ./Image
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: kernel-${{ env.CONFIG }}
-          path: |
-            *.zip
-            *.img
+          path: ./AnyKernel3/*
+
+      - name: 🔨 get bot script (获取 bot 脚本)
+        uses: actions/checkout@v4
+        with:
+         path: bot
+
+      - name: 📤 Upload to telegram (上传至Telegram群组)
+        run: |
+          if [ ! -z "${{ secrets.BOT_TOKEN }}" ]; then
+            cd AnyKernel3
+            zip -q -r "../${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3.zip" ./*
+            cd ..
+            pip3 install telethon
+            python3 ./bot/script/buildbot.py "./${{ inputs.android_version }}-${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.os_patch_level }}-AnyKernel3.zip"
+          fi
+        env:
+          CHATID: ${{secrets.CHATID}}
+          BOT_TOKEN: ${{secrets.BOT_TOKEN}}
+          MESSAGE_THREAD_ID: ${{secrets.MESSAGE_THREAD_ID}}
+          KernelVer: ${{ github.event.inputs.android_version}}-${{ github.event.inputs.kernel_version }}
+          KPM: ${{ github.event.inputs.KPM }}
