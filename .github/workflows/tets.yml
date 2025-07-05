@@ -297,3 +297,14 @@ jobs:
         run: |
           echo "GitHub release created with the following files:"
           ls ./downloaded-artifacts/**/*
+
+      - name: Send telegram message on push
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.CHAT_ID }}
+          #TELEGRAM_MESSAGE_THREAD_ID: ${{ secrets.TELEGRAM_MESSAGE_THREAD_ID }}
+        run: |
+          curl -X POST "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage" \
+            -d "chat_id=-100$TELEGRAM_CHAT_ID" \
+            -d "text=Latest release
+          https://github.com/SiPetualang/Kernel_Builderrr/releases/tag/${{ env.NEW_TAG }}"
